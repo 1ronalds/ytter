@@ -26,7 +26,7 @@ jobs:
           npm install
           npm run build
           ssh ronalds@ytter.lv pm2 stop server_r 2>/dev/null
-          scp -r build ronalds@ytter.lv:~/build
+          scp -r build ronalds@ytter.lv:~/build build
           ssh ronalds@ytter.lv pm2 start serve --name "server_r" -- -s build -l 3000
           
           
