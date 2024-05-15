@@ -20,11 +20,13 @@ jobs:
         uses: actions/setup-node@v2  
         with:
           node-version: '22'
-      - name: Build React application and deploy it
+      - name: Build React application
         working-directory: frontend/ytter
         run: |
           npm install
           npm run build
+      - name: Deploy React application
+        run: |
           ssh ronalds@ytter.lv pm2 stop server_r 2>/dev/null
           scp -r frontend/ytter/build ronalds@ytter.lv:~/react_build
           ssh ronalds@ytter.lv pm2 start serve --name "server_r" -- -s ~/react_build -l 3000
