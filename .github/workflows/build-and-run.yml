@@ -1,4 +1,4 @@
-name: Build and Run Spring Boot and React Apps
+name: Build and Run Spring Boot and React App
 on:
   push:
     branches:
@@ -28,7 +28,7 @@ jobs:
       - name: Deploy React application
         run: |
           scp -r frontend/ytter/build/* ronalds@ytter.lv:~/build
-          ssh ronalds@ytter.lv echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S /usr/local/bin/deploy.sh
+          ssh ronalds@ytter.lv echo "${{secrets.SUDO_PASSWORD}}" | sudo -S /usr/local/bin/deploy.sh
           
           
         
