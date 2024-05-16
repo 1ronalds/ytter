@@ -27,9 +27,8 @@ jobs:
           npm run build
       - name: Deploy React application
         run: |
-          ssh ronalds@ytter.lv pm2 stop server_r | true
-          scp -r frontend/ytter/build ronalds@ytter.lv:~/react_build
-          ssh ronalds@ytter.lv pm2 start serve --name "server_r" -- -s ~/react_build -l 3000
+          scp -r frontend/ytter/build ronalds@ytter.lv:~/build
+          ssh ronalds@ytter.lv "sudo /usr/local/bin/deploy.sh"
           
           
         
