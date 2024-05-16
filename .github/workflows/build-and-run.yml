@@ -27,8 +27,8 @@ jobs:
           npm run build
       - name: Deploy React application
         run: |
-          scp -r frontend/ytter/build ronalds@ytter.lv:~/build
-          ssh ronalds@ytter.lv "sudo /usr/local/bin/deploy.sh"
+          scp -r frontend/ytter/build/* ronalds@ytter.lv:~/build
+          ssh ronalds@ytter.lv echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S /usr/local/bin/deploy.sh
           
           
         
