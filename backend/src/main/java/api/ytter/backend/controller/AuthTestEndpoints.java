@@ -3,8 +3,12 @@ package api.ytter.backend.controller;
 import api.ytter.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -14,19 +18,20 @@ public class AuthTestEndpoints {
 
     @GetMapping("/test/anyone-access")
     public ResponseEntity<String> accessToAnyone(){
-
-        return null;
+        return new ResponseEntity<>("success - access to anyone", HttpStatus.OK);
     }
 
     @GetMapping("/test/logged-in-access")
-    public ResponseEntity<String> accessToLoggedIn(){
-
-        return null;
+    public ResponseEntity<String> accessToLoggedIn(@RequestAttribute String username){
+        return new ResponseEntity<>("success - access to logged in, " + username, HttpStatus.OK);
     }
 
     @GetMapping("/test/admin-access")
-    public ResponseEntity<String> accessToAdmin(){
+    public ResponseEntity<String> accessToAdmin(@RequestAttribute String isAdmin){
+        if(isAdmin.equals("no")){
+            throw new RuntimeException();
+        }
 
-        return null;
+        return new ResponseEntity<>("success - admin access logged in", HttpStatus.OK);
     }
 }
