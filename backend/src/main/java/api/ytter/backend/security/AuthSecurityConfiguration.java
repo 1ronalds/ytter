@@ -31,6 +31,7 @@ public class AuthSecurityConfiguration{
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/logout").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/verify/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/test/anyone-access").permitAll()
                         .requestMatchers(HttpMethod.GET, "/test/logged-in-access").authenticated()
                         .requestMatchers(HttpMethod.GET,"/test/admin-access").authenticated());

@@ -1,12 +1,12 @@
 package api.ytter.backend.service;
 
 import api.ytter.backend.database_model.UserEntity;
+import api.ytter.backend.database_model.VerificationEntity;
 import api.ytter.backend.database_repository.UserRepository;
+import api.ytter.backend.database_repository.VerificationRepository;
 import api.ytter.backend.model.LoginData;
 import api.ytter.backend.model.RegistrationData;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,21 +16,21 @@ import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class AuthService {
     private final UserRepository userRepository;
+    private final VerificationRepository verificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecretKey jwtSecret;
-
-    @Value("signing-password")
-    String signingPassword;
+    private final MailService mailService;
 
     public void registerUser(RegistrationData registrationData){
         if(
-                userRepository.findByEmail(registrationData.getEmail()).isEmpty() &&
-                userRepository.findByUsername(registrationData.getUsername()).isEmpty()
+            userRepository.findByEmail(registrationData.getEmail()).isEmpty() &&
+            userRepository.findByUsername(registrationData.getUsername()).isEmpty()
         ){
             UserEntity userEntity = new UserEntity();
             userEntity.setEmail(registrationData.getEmail());
@@ -39,6 +39,13 @@ public class AuthService {
             userEntity.setIsAdmin(false);
             userEntity.setIsVerified(false);
             userRepository.save(userEntity);
+
+            VerificationEntity verificationEntity = new VerificationEntity();
+            verificationEntity.setUser(userRepository.findByUsername(registrationData.getUsername()).get());
+            verificationEntity.setVerificationKey(UUID.randomUUID().toString().replace("-", "").substring(0, 30));
+            verificationRepository.save(verificationEntity);
+
+            mailService.sendVerificationCode(registrationData.getEmail(), verificationEntity.getVerificationKey());
         } else {
             throw new RuntimeException();
         }
@@ -54,7 +61,11 @@ public class AuthService {
                 userEntity = userRepository.findByEmail(loginData.getEmail()).orElseThrow(RuntimeException::new);
             }
             if(passwordEncoder.matches(loginData.getPassword(), userEntity.getHashedPassword())){
-                JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin());
+                if(userEntity.getIsVerified()) {
+                    JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin());
+                } else {
+                    throw new RuntimeException();
+                }
             } else {
                 throw new RuntimeException();
             }
@@ -76,6 +87,11 @@ public class AuthService {
     }
 
     public void verifyEmail(String verificationKey){
-
+        VerificationEntity verificationEntity = verificationRepository.findByVerificationKey(verificationKey)
+                .orElseThrow(RuntimeException::new);
+        UserEntity userEntity = userRepository.getReferenceById(verificationEntity.getUser().getId());
+        userEntity.setIsVerified(true);
+        userRepository.save(userEntity);
+        verificationRepository.delete(verificationEntity);
     }
 }
