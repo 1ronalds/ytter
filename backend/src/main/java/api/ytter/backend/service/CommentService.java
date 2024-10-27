@@ -1,14 +1,17 @@
 package api.ytter.backend.service;
 
 import api.ytter.backend.database_model.CommentEntity;
+import api.ytter.backend.database_model.NotificationEntity;
 import api.ytter.backend.database_model.PostEntity;
 import api.ytter.backend.database_repository.CommentRepository;
 import api.ytter.backend.database_repository.LikeRepository;
+import api.ytter.backend.database_repository.NotificationRepository;
 import api.ytter.backend.database_repository.PostRepository;
 import api.ytter.backend.model.CommentData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -18,37 +21,39 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
+    private final NotificationRepository notificationRepository;
 
     public List<CommentData> getCommentsToPost(Long postId){
         return commentRepository.findAllAsReplyToPost(postId)
                 .stream()
                 .map(commentEntity -> new CommentData(
                         commentEntity.getId(),
+                        commentEntity.getUser().getId(),
                         commentEntity.getRootPost().getId(),
                         commentEntity.getReplyToComment().getId(),
-                        commentEntity.getReyeetCount(),
                         commentEntity.getLikeCount(),
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
+                        commentEntity.getTimestamp(),
                         likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent(),
-                        true
                         ))
                 .toList();
     }
+
 
     public List<CommentData> getCommentsToComment(Long commentId){
         return commentRepository.findAllByReplyToComment_Id(commentId)
                 .stream()
                 .map(commentEntity -> new CommentData(
                         commentEntity.getId(),
+                        commentEntity.getUser().getId(),
                         commentEntity.getRootPost().getId(),
                         commentEntity.getReplyToComment().getId(),
-                        commentEntity.getReyeetCount(),
                         commentEntity.getLikeCount(),
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
-                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent(),
-                        true
+                        commentEntity.getTimestamp(),
+                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent()
                 )).toList();
     }
 
@@ -75,9 +80,22 @@ public class CommentService {
         commentEntity.setComment(commentData.getComment());
         commentEntity.setRootPost(postRepository.findById(commentData.getRootPostId()).orElseThrow(RuntimeException::new));
         commentEntity.setId(postId);
+        commentEntity.setTimestamp(new Date());
         if(commentData.getReplyToCommentId() != null){commentRepository.save(replyTo);};
         commentRepository.save(commentEntity);
         commentData.setCommentId(postId);
+
+        NotificationEntity notificationEntity = new NotificationEntity();
+        notificationEntity.setDescription("Your comment/post has a reply");
+        notificationEntity.setUser(commentEntity.getReplyToComment() == null ?
+                commentEntity.getRootPost().getUser() : commentEntity.getReplyToComment().getUser());
+        notificationEntity.setLink(commentEntity.getReplyToComment() == null ?
+                "/comment/to-post/".concat(String.valueOf(commentEntity.getRootPost().getId()))
+                : "/comment/to-comment/".concat(String.valueOf(commentEntity.getReplyToComment().getId())));
+        notificationEntity.setRead(false);
+        notificationEntity.setTimestamp(new Date());
+        notificationRepository.save(notificationEntity);
+
         return commentData;
     }
 }

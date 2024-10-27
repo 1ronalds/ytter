@@ -1,10 +1,13 @@
 package api.ytter.backend.service;
 
 import api.ytter.backend.database_model.PostEntity;
+import api.ytter.backend.database_model.UserEntity;
 import api.ytter.backend.database_repository.LikeRepository;
 import api.ytter.backend.database_repository.PostRepository;
+import api.ytter.backend.database_repository.ReyeetRepository;
 import api.ytter.backend.database_repository.UserRepository;
 import api.ytter.backend.model.PostData;
+import api.ytter.backend.model.ProfilePublicData;
 import api.ytter.backend.other.FileObject;
 import lombok.RequiredArgsConstructor;
 import org.apache.tika.Tika;
@@ -31,6 +34,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
+    private final ReyeetRepository reyeetRepository;
     static {
         magicNumbers.put("FFD8FF", "jpg");
         magicNumbers.put("89504E47", "png");
@@ -43,6 +47,24 @@ public class PostService {
         mimeExtension.put("webp", "image/webp");
     }
 
+    public List<PostData> getFollowingFeed(String username, Integer limit, Integer offset){
+        Pageable pageable = PageRequest.of(offset, limit, Sort.by("timestamp").descending());
+        List<PostEntity> posts = postRepository.
+                findAllPostsByUsersFollowing(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), pageable);
+        return posts.stream()
+                .map(postEntity -> new PostData(postEntity.getId(),
+                new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
+                postEntity.getImageId(),
+                postEntity.getReplyCount(),
+                postEntity.getLikeCount(),
+                postEntity.getReyeetCount(),
+                postEntity.getText(),
+                postEntity.getTimestamp(),
+                likeRepository.findByUserAndPost(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), postEntity).isPresent(),
+                reyeetRepository.findByUserAndPost(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), postEntity).isPresent()
+        )).toList();
+
+    }
 
     public List<PostData> getPostsByUsername(String username, Integer limit, Integer offset ){
         Pageable pageable = PageRequest.of(offset, limit, Sort.by("timestamp").descending());
@@ -50,7 +72,7 @@ public class PostService {
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
-                        postEntity.getUser().getId(),
+                        new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
                         postEntity.getImageId(),
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
@@ -58,11 +80,12 @@ public class PostService {
                         postEntity.getText(),
                         postEntity.getTimestamp(),
                         likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        true //change later
+                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
                         ))
                 .toList();
-
     }
+
+
 
     public List<PostData> getTopPostsPast7Days(Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
@@ -73,7 +96,7 @@ public class PostService {
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
-                        postEntity.getUser().getId(),
+                        new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
                         postEntity.getImageId(),
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
@@ -81,7 +104,7 @@ public class PostService {
                         postEntity.getText(),
                         postEntity.getTimestamp(),
                         likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        true //change later
+                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
                 )).toList();
     }
 
@@ -94,7 +117,7 @@ public class PostService {
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
-                        postEntity.getUser().getId(),
+                        new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
                         postEntity.getImageId(),
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
@@ -102,7 +125,7 @@ public class PostService {
                         postEntity.getText(),
                         postEntity.getTimestamp(),
                         likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        true //change later
+                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
                 )).toList();
     }
 
@@ -112,7 +135,7 @@ public class PostService {
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
-                        postEntity.getUser().getId(),
+                        new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
                         postEntity.getImageId(),
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
@@ -120,7 +143,7 @@ public class PostService {
                         postEntity.getText(),
                         postEntity.getTimestamp(),
                         likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        true //change later
+                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
                 )).toList();
     }
 
@@ -128,7 +151,7 @@ public class PostService {
         PostData postData = new PostData();
         PostEntity postEntity = postRepository.findById(PostId).orElseThrow(RuntimeException::new);
         postData.setPostId(postEntity.getId());
-        postData.setUserId(postEntity.getUser().getId());
+        postData.setProfileDataPublic(new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()));
         postData.setImageId(postEntity.getImageId());
         postData.setTimestamp(postEntity.getTimestamp());
         postData.setText(postEntity.getText());
@@ -214,5 +237,14 @@ public class PostService {
         postEntity.setTimestamp(new Date());
         postRepository.save(postEntity);
         return postEntity;
+    }
+
+    public void deletePost(String username, Long postId){
+        UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
+        if(postRepository.findById(postId).get().getUser().equals(userEntity)){
+            postRepository.deleteById(postId);
+        } else {
+            throw new RuntimeException();
+        }
     }
 }

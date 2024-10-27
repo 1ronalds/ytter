@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,12 +18,12 @@ public class CommentData {
     }
 
     Long commentId;
+    Long userId;
     Long rootPostId;
     Long replyToCommentId;
-    Long reyeetCount;
     Long likeCount;
     Long replyCount;
     String comment;
+    Date timestamp;
     private Boolean liked;
-    private Boolean reyeeted;
 }

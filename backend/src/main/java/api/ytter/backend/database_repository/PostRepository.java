@@ -16,7 +16,14 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
-    @Query("SELECT p FROM Post p WHERE p.createdDate BETWEEN :startDate AND :endDate ORDER BY p.likes DESC")
+    @Query(value =
+            """
+            SELECT * 
+            FROM Post 
+            WHERE Post.createdDate BETWEEN :startDate AND :endDate 
+            ORDER BY Post.likes DESC
+            """,
+            nativeQuery = true)
     List<PostEntity> findAllByDateRangeSortedByLikes(@Param("startDate") LocalDateTime startDate,
                                                      @Param("endDate") LocalDateTime endDate,
                                                      Pageable pageable);
@@ -27,4 +34,17 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     Page<PostEntity> findAllByOrderByIdDesc(Pageable pageable);
 
     List<PostEntity> findByUser(UserEntity user, Pageable pageable);
+
+    @Query(
+            value =
+            """
+            SELECT p.*
+            FROM posts p
+            JOIN follow f ON p.author = f.following_id
+            WHERE f.follower_id = :user.id
+            ORDER BY p.timestamp_ DESC;
+            """,
+            nativeQuery = true
+    )
+    List<PostEntity> findAllPostsByUsersFollowing(UserEntity user, Pageable pageable);
 }

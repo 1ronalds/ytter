@@ -55,8 +55,12 @@ public class AuthService {
         String JWT = "";
         if(loginData.getUsername() != null || loginData.getPassword() != null){
             UserEntity userEntity;
+
             if(loginData.getUsername() != null){
                 userEntity = userRepository.findByUsername(loginData.getUsername()).orElseThrow(RuntimeException::new);
+                if(userEntity.getIsVerified() == false){
+                    throw new RuntimeException(); // unverified
+                }
             } else {
                 userEntity = userRepository.findByEmail(loginData.getEmail()).orElseThrow(RuntimeException::new);
             }

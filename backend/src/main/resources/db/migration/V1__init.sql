@@ -4,7 +4,11 @@ CREATE TABLE users (
     hashed_password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     is_verified BOOL NOT NULL,
-    is_admin BOOL NOT NULL
+    is_admin BOOL NOT NULL,
+    post_count INTEGER NOT NULL,
+    reyeet_count INTEGER NOT NULL,
+    follower_count INTEGER NOT NULL,
+    following_count INTEGER NOT NULL
 );
 
 CREATE TABLE verifications (
@@ -20,7 +24,7 @@ CREATE TABLE posts (
     text VARCHAR(300) NOT NULL,
     reply_count BIGINT NOT NULL,
     image_id BIGINT NULL,
-    timestamp_ DATETIME,
+    timestamp_ DATETIME NOT NULL,
     like_count BIGINT NOT NULL,
     reyeet_count BIGINT NOT NULL,
     FOREIGN KEY (author) REFERENCES users(id)
@@ -35,7 +39,7 @@ CREATE TABLE comments (
     reply_count BIGINT NOT NULL,
     like_count BIGINT NOT NULL,
     comment_count BIGINT NOT NULL,
-    reyeet_count BIGINT NOT NULL,
+    timestamp_ DATETIME NOT NULL,
     FOREIGN KEY (root_post) REFERENCES posts(id),
     FOREIGN KEY (reply_to_comment) REFERENCES comments(id)
     FOREIGN KEY (author) REFERENCES users(id)
@@ -43,7 +47,7 @@ CREATE TABLE comments (
 );
 
 CREATE TABLE likes (
-    id BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     post_id BIGINT NULL,
     comment_id BIGINT NULL,
     user_id BIGINT NOT NULL,
@@ -51,3 +55,30 @@ CREATE TABLE likes (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (comment_id) REFERENCES comments(id)
 );
+
+CREATE TABLE reyeets (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    post_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+
+CREATE TABLE follow (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    follower_id BIGINT NOT NULL,
+    following_id BIGINT NOT NULL,
+    FOREIGN KEY (follower_id) REFERENCES users(id),
+    FOREIGN KEY (following_id) REFERENCES users(id)
+);
+
+CREATE TABLE notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    description varchar(50) NOT NULL,
+    link varchar(50) NOT NULL,
+    read boolean NOT NULL,
+    timestamp_ DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+)

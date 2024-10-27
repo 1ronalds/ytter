@@ -31,4 +31,9 @@ public class CommentEndpoints {
         return new ResponseEntity<CommentData>(commentService.createComment(commentData), HttpStatus.OK);
     }
 
+    @PostMapping("/comment/to-comment/create")
+    public ResponseEntity<CommentData> postCommentToComment(@RequestBody CommentData commentData){
+        return new ResponseEntity<CommentData> (commentService.createComment(commentData), HttpStatus.OK);
+    }
+
 }

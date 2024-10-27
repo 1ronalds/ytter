@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity
 @Table(name = "comments")
 @Getter
@@ -38,13 +40,12 @@ public class CommentEntity {
     @Column(name = "comment_count")
     private Long commentCount;
 
-    @Column(name = "reyeetCount")
-    private Long reyeetCount;
+    @Column(name = "timestamp_")
+    private Date timestamp;
 
     public void increaseReplyCount(){
         this.replyCount += 1;
     }
-
     public void decreaseReplyCount(){
         this.replyCount -= 1;
     }
@@ -53,11 +54,5 @@ public class CommentEntity {
     }
     public void decreaseLikeCount(){
         this.likeCount -= 1;
-    }
-    public void increaseReyeetCount(){
-        this.reyeetCount += 1;
-    }
-    public void decreaseReyeetCount(){
-        this.reyeetCount -= 1;
     }
 }

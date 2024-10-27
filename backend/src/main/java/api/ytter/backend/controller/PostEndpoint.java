@@ -27,12 +27,19 @@ public class PostEndpoint {
         return new ResponseEntity<List<PostData>>(postService.getPostsByUsername(username, limit, offset), HttpStatus.OK);
     }
 
+    @GetMapping("/posts/by-me")
+    ResponseEntity<List<PostData>> getPostsByMe(@RequestAttribute String username,
+                                                @RequestParam Integer limit,
+                                                @RequestParam Integer offset){
+        return new ResponseEntity<>(postService.getPostsByUsername(username, limit, offset), HttpStatus.OK);
+    }
+
 
     @GetMapping("/posts/following-feed")
     ResponseEntity<List<PostData>> getFollowingFeed(@RequestAttribute String username,
                                                     @RequestParam Integer limit,
                                                     @RequestParam Integer offset){
-        return null;
+        return new ResponseEntity<List<PostData>> (postService.getFollowingFeed(username, limit, offset), HttpStatus.OK);
     }
 
     @GetMapping("/posts/top/this-week")
@@ -75,4 +82,12 @@ public class PostEndpoint {
         headers.setContentDispositionFormData("inline", image.getFilename());
         return new ResponseEntity<>(image.getFile(), headers, HttpStatus.OK);
     }
+
+    @DeleteMapping("/posts/{post-id}")
+    ResponseEntity<Void> deletePost(@RequestAttribute String username, @PathVariable("post-id") Long postId){
+        postService.deletePost(username, postId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
 }

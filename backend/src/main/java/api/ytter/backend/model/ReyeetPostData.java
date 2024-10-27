@@ -1,6 +1,5 @@
 package api.ytter.backend.model;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +11,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostData {
-
-    public PostData(String text){
-        this.text = text;
-    }
+public class ReyeetPostData {
 
     private Long postId;
     private ProfilePublicData profileDataPublic;
@@ -28,4 +23,5 @@ public class PostData {
     private Date timestamp;
     private Boolean liked;
     private Boolean reyeeted;
+    private String reyeetedByName;
 }
