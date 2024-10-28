@@ -3,10 +3,8 @@ package api.ytter.backend.service;
 import api.ytter.backend.database_model.CommentEntity;
 import api.ytter.backend.database_model.NotificationEntity;
 import api.ytter.backend.database_model.PostEntity;
-import api.ytter.backend.database_repository.CommentRepository;
-import api.ytter.backend.database_repository.LikeRepository;
-import api.ytter.backend.database_repository.NotificationRepository;
-import api.ytter.backend.database_repository.PostRepository;
+import api.ytter.backend.database_repository.*;
+import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.CommentData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +20,7 @@ public class CommentService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
     public List<CommentData> getCommentsToPost(Long postId){
         return commentRepository.findAllAsReplyToPost(postId)
@@ -35,7 +34,7 @@ public class CommentService {
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
                         commentEntity.getTimestamp(),
-                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent(),
+                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent()
                         ))
                 .toList();
     }
@@ -81,7 +80,9 @@ public class CommentService {
         commentEntity.setRootPost(postRepository.findById(commentData.getRootPostId()).orElseThrow(RuntimeException::new));
         commentEntity.setId(postId);
         commentEntity.setTimestamp(new Date());
-        if(commentData.getReplyToCommentId() != null){commentRepository.save(replyTo);};
+        if(commentData.getReplyToCommentId() != null){
+            commentRepository.save(replyTo);
+        };
         commentRepository.save(commentEntity);
         commentData.setCommentId(postId);
 
@@ -97,5 +98,20 @@ public class CommentService {
         notificationRepository.save(notificationEntity);
 
         return commentData;
+    }
+
+    public void deleteComment(String username, Long commentId) {
+        CommentEntity deletableComment = commentRepository.findById(commentId).orElseThrow(() -> new InvalidDataException("Deletable comment doesnt exist"));
+        if (deletableComment.getUser().getUsername().equals(username) || userRepository.findByUsername(username).get().getIsAdmin()) {
+            if (!commentRepository.findByReplyToCommentId(deletableComment.getId()).isEmpty()) {
+                deletableComment.setComment("[deleted]");
+                deletableComment.setUser(null);
+                commentRepository.save(deletableComment);
+            } else {
+                commentRepository.delete(deletableComment);
+            }
+        } else {
+            throw new InvalidDataException("Not your comment and not admin");
+        }
     }
 }

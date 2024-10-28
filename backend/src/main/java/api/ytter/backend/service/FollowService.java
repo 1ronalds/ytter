@@ -6,6 +6,7 @@ import api.ytter.backend.database_model.UserEntity;
 import api.ytter.backend.database_repository.FollowRepository;
 import api.ytter.backend.database_repository.NotificationRepository;
 import api.ytter.backend.database_repository.UserRepository;
+import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.ProfilePublicData;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -28,7 +29,7 @@ public class FollowService {
     public void followUser(String follower, String following){
         FollowEntity followEntity = new FollowEntity();
         followEntity.setFollower(userRepository.findByUsername(follower).orElseThrow(RuntimeException::new));
-        UserEntity followingEntity = userRepository.findByUsername(following).orElseThrow(RuntimeException::new);
+        UserEntity followingEntity = userRepository.findByUsername(following).orElseThrow(()-> new InvalidDataException("User doesnt exist"));
         followEntity.setFollowing(followingEntity);
         followRepository.save(followEntity);
 

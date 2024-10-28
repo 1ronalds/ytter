@@ -4,10 +4,14 @@ import api.ytter.backend.database_model.UserEntity;
 import api.ytter.backend.database_model.VerificationEntity;
 import api.ytter.backend.database_repository.UserRepository;
 import api.ytter.backend.database_repository.VerificationRepository;
+import api.ytter.backend.exception.exception_types.LoginException;
+import api.ytter.backend.exception.exception_types.RegistrationException;
+import api.ytter.backend.exception.exception_types.VerificationException;
 import api.ytter.backend.model.LoginData;
 import api.ytter.backend.model.RegistrationData;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,34 +51,33 @@ public class AuthService {
 
             mailService.sendVerificationCode(registrationData.getEmail(), verificationEntity.getVerificationKey());
         } else {
-            throw new RuntimeException();
+            throw new RegistrationException("User already registered");
         }
     }
 
     public String checkLoginAndGenerateToken(LoginData loginData){
         String JWT = "";
-        if(loginData.getUsername() != null || loginData.getPassword() != null){
+        if(loginData.getUsername() != null || loginData.getEmail() != null){
             UserEntity userEntity;
 
             if(loginData.getUsername() != null){
-                userEntity = userRepository.findByUsername(loginData.getUsername()).orElseThrow(RuntimeException::new);
-                if(userEntity.getIsVerified() == false){
-                    throw new RuntimeException(); // unverified
+                userEntity = userRepository.findByUsername(loginData.getUsername()).orElseThrow(()-> new LoginException("Invalid username/password"));
+                if(!userEntity.getIsVerified()){
+                    throw new LoginException("User not verified");
                 }
             } else {
-                userEntity = userRepository.findByEmail(loginData.getEmail()).orElseThrow(RuntimeException::new);
+                userEntity = userRepository.findByEmail(loginData.getEmail()).orElseThrow(()-> new LoginException("Invalid username/password"));
+                if(!userEntity.getIsVerified()){
+                    throw new LoginException("User not verified");
+                }
             }
             if(passwordEncoder.matches(loginData.getPassword(), userEntity.getHashedPassword())){
-                if(userEntity.getIsVerified()) {
-                    JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin());
-                } else {
-                    throw new RuntimeException();
-                }
+                JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin());
             } else {
-                throw new RuntimeException();
+                throw new LoginException("Invalid username/password");
             }
         } else {
-            throw new RuntimeException();
+            throw new LoginException("Login data hasnt been passed");
         }
         return JWT;
     }
@@ -92,7 +95,7 @@ public class AuthService {
 
     public void verifyEmail(String verificationKey){
         VerificationEntity verificationEntity = verificationRepository.findByVerificationKey(verificationKey)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(()->new VerificationException("Invalid verification key"));
         UserEntity userEntity = userRepository.getReferenceById(verificationEntity.getUser().getId());
         userEntity.setIsVerified(true);
         userRepository.save(userEntity);

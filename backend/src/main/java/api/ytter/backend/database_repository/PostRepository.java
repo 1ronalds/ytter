@@ -16,8 +16,7 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
-    @Query(value =
-            """
+    @Query(value = """
             SELECT * 
             FROM Post 
             WHERE Post.createdDate BETWEEN :startDate AND :endDate 
@@ -35,16 +34,13 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     List<PostEntity> findByUser(UserEntity user, Pageable pageable);
 
-    @Query(
-            value =
-            """
+    @Query(value = """
             SELECT p.*
             FROM posts p
             JOIN follow f ON p.author = f.following_id
             WHERE f.follower_id = :user.id
             ORDER BY p.timestamp_ DESC;
             """,
-            nativeQuery = true
-    )
+            nativeQuery = true)
     List<PostEntity> findAllPostsByUsersFollowing(UserEntity user, Pageable pageable);
 }

@@ -7,6 +7,7 @@ import api.ytter.backend.database_repository.LikeRepository;
 import api.ytter.backend.database_repository.PostRepository;
 import api.ytter.backend.database_repository.ReyeetRepository;
 import api.ytter.backend.database_repository.UserRepository;
+import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.PostData;
 import api.ytter.backend.model.ProfilePublicData;
 import api.ytter.backend.model.ReyeetPostData;
@@ -27,7 +28,7 @@ public class ReyeetService {
 
     public void addReyeet(String username, Long postId){
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        PostEntity postEntity = postRepository.findById(postId).orElseThrow(RuntimeException::new);
+        PostEntity postEntity = postRepository.findById(postId).orElseThrow(()-> new InvalidDataException("Post doesnt exist")));
 
         if(reyeetRepository.findByUserAndPost(userEntity, postEntity).isEmpty()){
             ReyeetEntity reyeetEntity = new ReyeetEntity();
@@ -42,7 +43,7 @@ public class ReyeetService {
 
     public void deleteReyeet(String username, Long postId) {
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        PostEntity postEntity = postRepository.findById(postId).orElseThrow(RuntimeException::new);
+        PostEntity postEntity = postRepository.findById(postId).orElseThrow(()-> new InvalidDataException("Post doesnt exist")));
         ReyeetEntity reyeetEntity = reyeetRepository.findByUserAndPost(userEntity, postEntity).orElseThrow(RuntimeException::new);
         reyeetRepository.delete(reyeetEntity);
     }
@@ -65,5 +66,4 @@ public class ReyeetService {
                     reyeetEntity.getUser().getName()
                     )).toList();
     }
-
 }

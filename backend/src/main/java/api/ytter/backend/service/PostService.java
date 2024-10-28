@@ -2,10 +2,8 @@ package api.ytter.backend.service;
 
 import api.ytter.backend.database_model.PostEntity;
 import api.ytter.backend.database_model.UserEntity;
-import api.ytter.backend.database_repository.LikeRepository;
-import api.ytter.backend.database_repository.PostRepository;
-import api.ytter.backend.database_repository.ReyeetRepository;
-import api.ytter.backend.database_repository.UserRepository;
+import api.ytter.backend.database_repository.*;
+import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.PostData;
 import api.ytter.backend.model.ProfilePublicData;
 import api.ytter.backend.other.FileObject;
@@ -35,6 +33,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final ReyeetRepository reyeetRepository;
+    private final CommentRepository commentRepository;
     static {
         magicNumbers.put("FFD8FF", "jpg");
         magicNumbers.put("89504E47", "png");
@@ -207,7 +206,7 @@ public class PostService {
                 }
 
                 if (!ALLOWED_MIME_TYPES.contains(tika.detect(image.getInputStream()))){
-                    throw new RuntimeException();
+                    throw new InvalidDataException("Not supported file format");
                 }
 
                 byte[] imageBytes = image.getBytes();
@@ -241,10 +240,12 @@ public class PostService {
 
     public void deletePost(String username, Long postId){
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        if(postRepository.findById(postId).get().getUser().equals(userEntity)){
+        if(postRepository.findById(postId).get().getUser().equals(userEntity) || userEntity.getIsAdmin()){
+            commentRepository.deleteAllByRootPostId(postId);
             postRepository.deleteById(postId);
+
         } else {
-            throw new RuntimeException();
+            throw new InvalidDataException("Not your post, not admin");
         }
     }
 }

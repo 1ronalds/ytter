@@ -1,5 +1,6 @@
 package api.ytter.backend.security;
 
+import api.ytter.backend.exception.exception_types.AuthorizationException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -31,11 +32,11 @@ public class AuthFilter extends OncePerRequestFilter {
             try {
                 claims = Jwts.parser().verifyWith(jwtSecret).build().parseSignedClaims(JWT).getPayload();
             } catch (RuntimeException e) {
-                throw new RuntimeException(); //invalid token
+                throw new AuthorizationException("Invalid token");
             }
 
             if (claims.getExpiration().before(new Date())) {
-                throw new RuntimeException(); // expired token
+                throw new AuthorizationException("Expired token");
             }
 
             request.setAttribute("username", claims.getSubject());

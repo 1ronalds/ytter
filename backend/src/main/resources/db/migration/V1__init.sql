@@ -32,7 +32,7 @@ CREATE TABLE posts (
 
 CREATE TABLE comments (
     id BIGINT PRIMARY KEY,
-    author BIGINT NOT NULL,
+    author BIGINT NULL,
     root_post BIGINT NOT NULL,
     reply_to_comment BIGINT NULL,
     comment VARCHAR(300),

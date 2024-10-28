@@ -12,7 +12,16 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     @Query("SELECT c FROM CommentEntity c WHERE c.rootPost.id = :rootPostId AND c.replyToComment IS NULL")
     List<CommentEntity> findAllAsReplyToPost(@Param("rootPostId") Long rootPostId);
 
-
     List<CommentEntity> findAllByReplyToComment_Id(Long commentId);
 
+    @Query(value = "DELETE FROM comments WHERE rootPost = :postId", nativeQuery = true)
+    Void deleteAllByRootPostId(Long postId);
+
+    @Query(value = """
+            SELECT *
+            FROM comments c
+            WHERE c.replyToComment.id = :replyToCommentId
+            """, nativeQuery = true)
+    List<CommentEntity> findByReplyToCommentId(Long replyToCommentId);
 }
+
