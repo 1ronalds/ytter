@@ -27,6 +27,7 @@ CREATE TABLE posts (
     timestamp_ DATETIME NOT NULL,
     like_count BIGINT NOT NULL,
     reyeet_count BIGINT NOT NULL,
+    reported BOOL NOT NULL,
     FOREIGN KEY (author) REFERENCES users(id)
 );
 
@@ -40,6 +41,7 @@ CREATE TABLE comments (
     like_count BIGINT NOT NULL,
     comment_count BIGINT NOT NULL,
     timestamp_ DATETIME NOT NULL,
+    reported BOOL NOT NULL,
     FOREIGN KEY (root_post) REFERENCES posts(id),
     FOREIGN KEY (reply_to_comment) REFERENCES comments(id)
     FOREIGN KEY (author) REFERENCES users(id)
@@ -78,7 +80,7 @@ CREATE TABLE notifications (
     user_id BIGINT NOT NULL,
     description varchar(50) NOT NULL,
     link varchar(50) NOT NULL,
-    read boolean NOT NULL,
+    read BOOL NOT NULL,
     timestamp_ DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )

@@ -13,10 +13,7 @@ import java.util.Date;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "posts", indexes = {
-        @Index(name = "idx_timestamp", columnList = "timestamp"),
-        @Index(name = "idx_user", columnList = "userId")
-})
+@Table(name = "posts")
 public class PostEntity {
     @Id
     private Long id;
@@ -35,6 +32,8 @@ public class PostEntity {
     @ManyToOne
     @JoinColumn(name = "author")
     private UserEntity user;
+    @Column(name = "reported")
+    private Boolean reported;
 
     public void increaseReplyCount(){
         this.replyCount += 1;
