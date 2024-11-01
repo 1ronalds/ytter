@@ -29,8 +29,15 @@ public class ReyeetEndpoints {
 
     @GetMapping("/posts/following-reyeet-feed")
     ResponseEntity<List<ReyeetPostData>> getFollowingFeed(@RequestAttribute String username,
-                                                    @RequestParam Integer limit,
-                                                    @RequestParam Integer offset){
+                                                          @RequestParam Integer limit,
+                                                          @RequestParam Integer offset){
         return new ResponseEntity<List<ReyeetPostData>> (reyeetService.getFollowingReyeetFeed(username, limit, offset), HttpStatus.OK);
+    }
+
+    @GetMapping("/reyeets/{username}")
+    ResponseEntity<List<ReyeetPostData>> getReyeetsByUser(@RequestAttribute String username,
+                                                          @RequestParam Integer limit,
+                                                          @RequestParam Integer offset){
+        return new ResponseEntity<>(reyeetService.getReyeetsByUser(username, limit, offset), HttpStatus.OK);
     }
 }

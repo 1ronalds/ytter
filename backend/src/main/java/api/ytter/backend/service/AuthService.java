@@ -42,6 +42,7 @@ public class AuthService {
             userEntity.setHashedPassword(passwordEncoder.encode(registrationData.getPassword()));
             userEntity.setIsAdmin(false);
             userEntity.setIsVerified(false);
+            userEntity.setName(registrationData.getName());
             userRepository.save(userEntity);
 
             VerificationEntity verificationEntity = new VerificationEntity();

@@ -18,9 +18,9 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     @Query(value = """
             SELECT * 
-            FROM Post 
-            WHERE Post.createdDate BETWEEN :startDate AND :endDate 
-            ORDER BY Post.likes DESC
+            FROM posts
+            WHERE timestamp_ BETWEEN :startDate AND :endDate 
+            ORDER BY like_count DESC
             """,
             nativeQuery = true)
     List<PostEntity> findAllByDateRangeSortedByLikes(@Param("startDate") LocalDateTime startDate,
@@ -29,8 +29,14 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     Optional<PostEntity> findByImageId(Long imageId);
 
+    @Query(value = """
+            SELECT *
+            FROM posts
+            WHERE reported = true
+            """, nativeQuery = true)
+    List<PostEntity> findAllByReported();
 
-    Page<PostEntity> findAllByOrderByIdDesc(Pageable pageable);
+    List<PostEntity> findAllByOrderByTimestamp_Desc(Pageable pageable);
 
     List<PostEntity> findByUser(UserEntity user, Pageable pageable);
 
@@ -38,9 +44,9 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             SELECT p.*
             FROM posts p
             JOIN follow f ON p.author = f.following_id
-            WHERE f.follower_id = :user.id
-            ORDER BY p.timestamp_ DESC;
+            WHERE f.follower_id = :userId
+            ORDER BY p.timestamp_ DESC
             """,
             nativeQuery = true)
-    List<PostEntity> findAllPostsByUsersFollowing(UserEntity user, Pageable pageable);
+    List<PostEntity> findAllPostsByUsersFollowing(Long userId, Pageable pageable);
 }

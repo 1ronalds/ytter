@@ -2,6 +2,7 @@ package api.ytter.backend.controller;
 
 import api.ytter.backend.database_model.CommentEntity;
 import api.ytter.backend.model.CommentData;
+import api.ytter.backend.model.PostData;
 import api.ytter.backend.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,5 +36,6 @@ public class CommentEndpoints {
     public ResponseEntity<CommentData> postCommentToComment(@RequestBody CommentData commentData){
         return new ResponseEntity<CommentData> (commentService.createComment(commentData), HttpStatus.OK);
     }
+
 
 }

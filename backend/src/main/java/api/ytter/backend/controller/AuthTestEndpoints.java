@@ -23,7 +23,7 @@ public class AuthTestEndpoints {
 
     @GetMapping("/test/logged-in-access")
     public ResponseEntity<String> accessToLoggedIn(@RequestAttribute String username){
-        return new ResponseEntity<>("success - access to logged in, " + username, HttpStatus.OK);
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
     @GetMapping("/test/admin-access")
@@ -32,6 +32,6 @@ public class AuthTestEndpoints {
             throw new RuntimeException();
         }
 
-        return new ResponseEntity<>("success - admin access logged in", HttpStatus.OK);
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 }

@@ -33,7 +33,7 @@ public class PostEntity {
     @JoinColumn(name = "author")
     private UserEntity user;
     @Column(name = "reported")
-    private Boolean reported;
+    private Boolean reported = false;
 
     public void increaseReplyCount(){
         this.replyCount += 1;

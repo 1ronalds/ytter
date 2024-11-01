@@ -30,7 +30,7 @@ public class AuthEndpoints {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/verify/{verificationKey}")
+    @GetMapping("/verify/{verificationKey}")
     public ResponseEntity<Void> verify(@PathVariable String verificationKey){
         authService.verifyEmail(verificationKey);
         return new ResponseEntity<>(HttpStatus.OK);

@@ -16,13 +16,14 @@ public class NotificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "user")
+    @ManyToOne
+    @JoinColumn(name = "user_id")
     private UserEntity user;
     @Column(name = "description")
     private String description;
     @Column(name = "link")
     private String link;
-    @Column(name = "read")
+    @Column(name = "is_read")
     private Boolean read;
     @Column(name = "timestamp_")
     private Date timestamp;

@@ -27,4 +27,6 @@ public interface ReyeetRepository extends JpaRepository<ReyeetEntity, Long> {
             nativeQuery = true
     )
     List<ReyeetEntity> findReyeetsByUserFollowing(@Param("user") UserEntity user, Pageable pageable);
+
+    List<ReyeetEntity> findReyeetsByUser(UserEntity userEntity, Pageable pageable);
 }

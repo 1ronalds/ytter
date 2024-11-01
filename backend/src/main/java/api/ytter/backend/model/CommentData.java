@@ -18,7 +18,7 @@ public class CommentData {
     }
 
     Long commentId;
-    Long userId;
+    ProfilePublicData profilePublicData;
     Long rootPostId;
     Long replyToCommentId;
     Long likeCount;

@@ -62,8 +62,8 @@ public class PostEndpoint {
         return new ResponseEntity<List<PostData>>(postService.getNewPosts(limit, offset), HttpStatus.OK);
     }
 
-    @GetMapping("/posts/{post-id}")
-    ResponseEntity<PostData> getPostById(@RequestAttribute("post-id") Long postId){
+    @GetMapping("/posts/by-id/{post-id}")
+    ResponseEntity<PostData> getPostById(@PathVariable("post-id") Long postId){
         return new ResponseEntity<PostData>(postService.getPostById(postId), HttpStatus.OK);
     }
 

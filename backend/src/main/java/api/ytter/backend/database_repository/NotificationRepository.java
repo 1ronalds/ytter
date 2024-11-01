@@ -15,7 +15,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     @Query(value = """
             SELECT * FROM notifications
-            WHERE user_id = :userId
+            WHERE user_id = :userEntity.id
             AND read = false
             ORDER BY timestamp DESC
             """, nativeQuery = true)
@@ -23,7 +23,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     @Query(value = """
             SELECT * FROM notifications
-            WHERE user_id = :userId
+            WHERE user_id = :userEntity.id
             AND read = true
             ORDER BY timestamp DESC
             """, nativeQuery = true)

@@ -47,9 +47,9 @@ public class PostService {
     }
 
     public List<PostData> getFollowingFeed(String username, Integer limit, Integer offset){
-        Pageable pageable = PageRequest.of(offset, limit, Sort.by("timestamp").descending());
+        Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
         List<PostEntity> posts = postRepository.
-                findAllPostsByUsersFollowing(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), pageable);
+                findAllPostsByUsersFollowing(userRepository.findByUsername(username).orElseThrow(RuntimeException::new).getId(), pageable);
         return posts.stream()
                 .map(postEntity -> new PostData(postEntity.getId(),
                 new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
@@ -66,7 +66,7 @@ public class PostService {
     }
 
     public List<PostData> getPostsByUsername(String username, Integer limit, Integer offset ){
-        Pageable pageable = PageRequest.of(offset, limit, Sort.by("timestamp").descending());
+        Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
         return postRepository.findByUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), pageable)
                 .stream()
                 .map(postEntity -> new PostData(
@@ -110,7 +110,7 @@ public class PostService {
     public List<PostData> getTopPostsPast30Days(Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = now.minusDays(7);
+        LocalDateTime startDate = now.minusDays(30);
 
         return postRepository.findAllByDateRangeSortedByLikes(startDate, now, pageable)
                 .stream()
@@ -130,7 +130,7 @@ public class PostService {
 
     public List<PostData> getNewPosts(Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
-        return postRepository.findAllByOrderByIdDesc(pageable)
+        return postRepository.findAllByOrderByTimestamp_Desc(pageable)
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),

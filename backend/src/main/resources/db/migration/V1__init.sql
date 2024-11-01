@@ -1,20 +1,17 @@
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    is_verified BOOL NOT NULL,
-    is_admin BOOL NOT NULL,
-    post_count INTEGER NOT NULL,
-    reyeet_count INTEGER NOT NULL,
-    follower_count INTEGER NOT NULL,
-    following_count INTEGER NOT NULL
+    is_verified BOOLEAN NOT NULL,
+    is_admin BOOLEAN NOT NULL
 );
 
 CREATE TABLE verifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     verification_key VARCHAR(30) NOT NULL UNIQUE,
-    user_id BIGINT,
+    user_id BIGINT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -43,7 +40,7 @@ CREATE TABLE comments (
     timestamp_ DATETIME NOT NULL,
     reported BOOL NOT NULL,
     FOREIGN KEY (root_post) REFERENCES posts(id),
-    FOREIGN KEY (reply_to_comment) REFERENCES comments(id)
+    FOREIGN KEY (reply_to_comment) REFERENCES comments(id),
     FOREIGN KEY (author) REFERENCES users(id)
 
 );
@@ -58,7 +55,7 @@ CREATE TABLE likes (
     FOREIGN KEY (comment_id) REFERENCES comments(id)
 );
 
-CREATE TABLE reyeets (
+CREATE TABLE reyeet (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     post_id BIGINT NOT NULL,
@@ -80,7 +77,7 @@ CREATE TABLE notifications (
     user_id BIGINT NOT NULL,
     description varchar(50) NOT NULL,
     link varchar(50) NOT NULL,
-    read BOOL NOT NULL,
+    is_read BOOL NOT NULL,
     timestamp_ DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )

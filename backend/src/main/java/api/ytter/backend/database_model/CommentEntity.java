@@ -44,7 +44,7 @@ public class CommentEntity {
     private Date timestamp;
 
     @Column(name = "reported")
-    private Boolean reported;
+    private Boolean reported = false;
 
     public void increaseReplyCount(){
         this.replyCount += 1;

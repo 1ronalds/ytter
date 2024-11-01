@@ -29,11 +29,21 @@ public class ReportEndpoints {
     }
 
     @GetMapping("/report")
-    public ResponseEntity<List<FlagData>> getReports(@RequestAttribute String username,
-                                                     @RequestParam Integer limit,
-                                                     @RequestParam Integer offset){
-        return new ResponseEntity<>(reportService.getReports(username, limit, offset), HttpStatus.OK);
+    public ResponseEntity<List<FlagData>> getReports(@RequestAttribute String username){
+        return new ResponseEntity<>(reportService.getReports(username), HttpStatus.OK);
     }
 
+    @DeleteMapping("/report/comment/{comment-id}")
+    public ResponseEntity<Void> ignoreCommentReport(@RequestAttribute String username,
+                                                    @PathVariable("comment-id") Long commentId) {
+        reportService.ignoreReportComment(username, commentId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
+    @DeleteMapping("/report/post/{post-id}")
+    public ResponseEntity<Void> ignorePostReport(@RequestAttribute String username,
+                                                 @PathVariable("post-id") Long postId) {
+        reportService.ignoreReportPost(username, postId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

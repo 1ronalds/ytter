@@ -6,12 +6,15 @@ import api.ytter.backend.database_model.PostEntity;
 import api.ytter.backend.database_repository.*;
 import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.CommentData;
+import api.ytter.backend.model.PostData;
+import api.ytter.backend.model.ProfilePublicData;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class CommentService {
                 .stream()
                 .map(commentEntity -> new CommentData(
                         commentEntity.getId(),
-                        commentEntity.getUser().getId(),
+                        new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
                         commentEntity.getRootPost().getId(),
                         commentEntity.getReplyToComment().getId(),
                         commentEntity.getLikeCount(),
@@ -45,7 +48,7 @@ public class CommentService {
                 .stream()
                 .map(commentEntity -> new CommentData(
                         commentEntity.getId(),
-                        commentEntity.getUser().getId(),
+                        new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
                         commentEntity.getRootPost().getId(),
                         commentEntity.getReplyToComment().getId(),
                         commentEntity.getLikeCount(),

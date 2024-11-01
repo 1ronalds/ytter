@@ -15,6 +15,6 @@ public class VerificationEntity {
     @Column(name = "verification_key")
     private String verificationKey;
     @ManyToOne
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     private UserEntity user;
 }

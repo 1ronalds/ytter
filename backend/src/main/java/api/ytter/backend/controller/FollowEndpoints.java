@@ -31,8 +31,8 @@ public class FollowEndpoints {
         return new ResponseEntity<List<ProfilePublicData>>(followService.getFollowingList(username),HttpStatus.OK);
     }
 
-    @GetMapping("/profile/{username}/following")
+    @GetMapping("/profile/{username}/followers")
     public ResponseEntity<List<ProfilePublicData>> getFollowers(@PathVariable String username){
-        return new ResponseEntity<List<ProfilePublicData>>(followService.getFollowingList(username),HttpStatus.OK);
+        return new ResponseEntity<List<ProfilePublicData>>(followService.getFollowerList(username),HttpStatus.OK);
     }
 }
