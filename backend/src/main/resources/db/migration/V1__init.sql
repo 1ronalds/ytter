@@ -36,7 +36,6 @@ CREATE TABLE comments (
     comment VARCHAR(300),
     reply_count BIGINT NOT NULL,
     like_count BIGINT NOT NULL,
-    comment_count BIGINT NOT NULL,
     timestamp_ DATETIME NOT NULL,
     reported BOOL NOT NULL,
     FOREIGN KEY (root_post) REFERENCES posts(id),
@@ -62,7 +61,6 @@ CREATE TABLE reyeet (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
-
 
 CREATE TABLE follow (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

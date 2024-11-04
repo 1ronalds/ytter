@@ -50,7 +50,7 @@ public class ReyeetService {
     public List<ReyeetPostData> getFollowingReyeetFeed(String username, Integer limit, Integer offset) {
         Pageable pageable = PageRequest.of(offset, limit);
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUserFollowing(userEntity, pageable);
+        List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUserFollowing(userEntity.getId(), pageable);
         return reyeetEntityList.stream().map(reyeetEntity -> new ReyeetPostData(
                 reyeetEntity.getPost().getId(),
                 new ProfilePublicData(reyeetEntity.getPost().getUser().getUsername(), reyeetEntity.getPost().getUser().getName()),

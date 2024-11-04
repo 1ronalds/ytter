@@ -15,10 +15,11 @@ public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
     FollowEntity findByFollowerAndFollowing(@Param("followerUsername") String followerUsername,
                                             @Param("followingUsername") String followingUsername);
 
-    @Query("SELECT f.follower FROM FollowEntity f WHERE f.following.username = :followingUsername")
-    List<UserEntity> findFollowersByFollowingUsername(@Param("followingUsername") String followingUsername);
 
-    @Query("SELECT f.following FROM FollowEntity f WHERE f.follower.username = :followerUsername")
-    List<UserEntity> findFollowingByFollowerUsername(@Param("followerUsername") String followerUsername);
+    @Query(value = "SELECT * FROM follow WHERE follower_id = :followerId", nativeQuery = true)
+    List<FollowEntity> findFollowingFromUsername(@Param("followerId") Long followerId);
+
+    @Query(value = "SELECT * FROM follow WHERE following_id = :followingId", nativeQuery = true)
+    List<FollowEntity> findFollowersToUsername(@Param("followingId") Long followingId);
 
 }

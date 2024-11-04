@@ -7,6 +7,7 @@ import api.ytter.backend.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,13 +29,19 @@ public class CommentEndpoints {
     }
 
     @PostMapping("/comment/to-post/create")
-    public ResponseEntity<CommentData> postComment(@RequestBody CommentData commentData){
-        return new ResponseEntity<CommentData>(commentService.createComment(commentData), HttpStatus.OK);
+    public ResponseEntity<CommentData> postComment(@RequestAttribute String username, @RequestBody CommentData commentData){
+        return new ResponseEntity<CommentData>(commentService.createComment(commentData, username), HttpStatus.OK);
     }
 
     @PostMapping("/comment/to-comment/create")
-    public ResponseEntity<CommentData> postCommentToComment(@RequestBody CommentData commentData){
-        return new ResponseEntity<CommentData> (commentService.createComment(commentData), HttpStatus.OK);
+    public ResponseEntity<CommentData> postCommentToComment(@RequestAttribute String username, @RequestBody CommentData commentData){
+        return new ResponseEntity<CommentData> (commentService.createComment(commentData, username), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/comment/delete/{comment-id}")
+    public ResponseEntity<Void> deleteComment(@RequestAttribute String username, @PathVariable("comment-id") Long commentId){
+        commentService.deleteComment(username, commentId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

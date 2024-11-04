@@ -47,16 +47,20 @@ public class FollowService {
     }
 
     public List<ProfilePublicData> getFollowerList(String username){
-        return followRepository.findFollowingByFollowerUsername(username).stream().map((userEntity -> new ProfilePublicData(
-                userEntity.getUsername(),
-                userEntity.getName()
+        return followRepository.findFollowersToUsername(userRepository.findByUsername(username)
+                .orElseThrow(()->new InvalidDataException("Username doesnt exist")).getId()).stream()
+                .map((followEntity -> new ProfilePublicData(
+                followEntity.getFollower().getUsername(),
+                followEntity.getFollower().getName()
         ))).toList();
     }
 
     public List<ProfilePublicData> getFollowingList(String username){
-        return followRepository.findFollowersByFollowingUsername(username).stream().map((userEntity -> new ProfilePublicData(
-                userEntity.getUsername(),
-                userEntity.getName()
+        return followRepository.findFollowingFromUsername(userRepository.findByUsername(username)
+                .orElseThrow(()->new InvalidDataException("Username doesnt exist"))
+                .getId()).stream().map((followEntity -> new ProfilePublicData(
+                followEntity.getFollowing().getUsername(),
+                followEntity.getFollowing().getName()
         ))).toList();
     }
 }

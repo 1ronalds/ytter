@@ -25,6 +25,16 @@ public class CommentService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
+
+    private CommentData getCommentById(Long commentId){
+        return commentRepository.findById(commentId).map(commentEntity -> new CommentData(commentEntity.getId(),
+                new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
+                commentEntity.getRootPost().getId(),
+                commentEntity.getReplyToComment() != null ? commentEntity.getReplyToComment().getId() : null,
+                commentEntity.getLikeCount(), commentEntity.getReplyCount(),
+                commentEntity.getComment(), commentEntity.getTimestamp(), false)).orElseThrow(()-> new InvalidDataException("Comment with this id doesnt exist"));
+    }
+
     public List<CommentData> getCommentsToPost(Long postId){
         return commentRepository.findAllAsReplyToPost(postId)
                 .stream()
@@ -32,7 +42,7 @@ public class CommentService {
                         commentEntity.getId(),
                         new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
                         commentEntity.getRootPost().getId(),
-                        commentEntity.getReplyToComment().getId(),
+                        commentEntity.getReplyToComment() != null ? commentEntity.getReplyToComment().getId() : null,
                         commentEntity.getLikeCount(),
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
@@ -50,7 +60,7 @@ public class CommentService {
                         commentEntity.getId(),
                         new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
                         commentEntity.getRootPost().getId(),
-                        commentEntity.getReplyToComment().getId(),
+                        commentEntity.getReplyToComment() != null ? commentEntity.getReplyToComment().getId() : null,
                         commentEntity.getLikeCount(),
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
@@ -60,11 +70,11 @@ public class CommentService {
     }
 
 
-    public CommentData createComment(CommentData commentData) {
+    public CommentData createComment(CommentData commentData, String username) {
         Long postId;
         Random random = new Random();
         do {
-            postId = random.nextLong();
+            postId = Math.abs(random.nextLong());
         } while (postRepository.existsById(postId));
         CommentEntity commentEntity = new CommentEntity();
         commentEntity.setReplyCount(0L);
@@ -79,10 +89,14 @@ public class CommentService {
             commentEntity.setReplyToComment(null);
             rootPost.increaseReplyCount();
         }
+        commentEntity.setUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new));
         commentEntity.setComment(commentData.getComment());
         commentEntity.setRootPost(postRepository.findById(commentData.getRootPostId()).orElseThrow(RuntimeException::new));
         commentEntity.setId(postId);
         commentEntity.setTimestamp(new Date());
+        commentEntity.setReported(false);
+        commentEntity.setLikeCount(0L);
+        commentEntity.setReplyCount(0L);
         if(commentData.getReplyToCommentId() != null){
             commentRepository.save(replyTo);
         };
@@ -100,7 +114,7 @@ public class CommentService {
         notificationEntity.setTimestamp(new Date());
         notificationRepository.save(notificationEntity);
 
-        return commentData;
+        return getCommentById(commentData.getCommentId());
     }
 
     public void deleteComment(String username, Long commentId) {

@@ -55,6 +55,7 @@ public class AuthSecurityConfiguration{
                         .requestMatchers(HttpMethod.GET, "/test/logged-in-access").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/admin/post/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/admin/comment/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/comment/delete/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/comment/to-post/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/comment/to-comment/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/comment/to-post/create").authenticated()
@@ -62,6 +63,7 @@ public class AuthSecurityConfiguration{
                         .requestMatchers(HttpMethod.POST, "/profile/*/follow").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/profile/*/follow").authenticated()
                         .requestMatchers(HttpMethod.GET, "/profile/*/following").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/profile/*/followers").permitAll()
                         .requestMatchers(HttpMethod.POST, "/post/*/like").authenticated()
                         .requestMatchers(HttpMethod.POST, "/comment/*/like").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/post/*/like").authenticated()
@@ -81,7 +83,8 @@ public class AuthSecurityConfiguration{
                         .requestMatchers(HttpMethod.DELETE, "/posts/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/posts/*/ry").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/posts/*/ry").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/posts/following-reyeet-feed").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reyeet-feed").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/reyeets/*").permitAll()
                         .anyRequest().denyAll());
         return http.build();
     }

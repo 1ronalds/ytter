@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 public class AuthTests {
 
+
     @Autowired
     MockMvc mockMvc;
 
@@ -110,6 +111,36 @@ public class AuthTests {
         jdbcTemplate.execute(sql);
 
         LoginData loginData = new LoginData("testUser", null, "password123");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String loginDataAsJsonString = objectMapper.writeValueAsString(loginData);
+
+        MvcResult result1 = mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginDataAsJsonString))
+                .andDo(print())
+                .andExpect(header().exists("Authorization"))
+                .andReturn();
+
+        String headerValue = result1.getResponse().getHeader("Authorization");
+
+        mockMvc.perform(get("/test/logged-in-access")
+                        .header("Authorization", headerValue))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string("success"));
+    }
+
+    @Test
+    void loginTestWithEmail() throws Exception {
+        String passwordHash = passwordEncoder.encode("password123");
+
+        String sql = String.format("""
+                INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
+                VALUES ('testUser', 'userTest', '%s', 'testUser@test.com', true, false);
+                """, passwordHash);
+        jdbcTemplate.execute(sql);
+
+        LoginData loginData = new LoginData(null, "testUser@test.com", "password123");
         ObjectMapper objectMapper = new ObjectMapper();
         String loginDataAsJsonString = objectMapper.writeValueAsString(loginData);
 

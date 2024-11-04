@@ -37,9 +37,6 @@ public class CommentEntity {
     @Column(name = "like_count")
     private Long likeCount;
 
-    @Column(name = "comment_count")
-    private Long commentCount;
-
     @Column(name = "timestamp_")
     private Date timestamp;
 

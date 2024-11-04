@@ -9,6 +9,7 @@ import api.ytter.backend.model.ProfilePublicData;
 import api.ytter.backend.other.FileObject;
 import lombok.RequiredArgsConstructor;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,7 +25,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class PostService {
-    private static final String UPLOAD_DIR = "uploads/";
     private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png", "image/bmp", "image/webp");
     private static final Map<String, String> magicNumbers = new HashMap<>();
     private static final Map<String, String> mimeExtension = new HashMap<>();
@@ -45,6 +45,10 @@ public class PostService {
         mimeExtension.put("bmp", "image/bmp");
         mimeExtension.put("webp", "image/webp");
     }
+
+
+    @Value("${ytter.uploads}")
+    private String UPLOAD_DIR;
 
     public List<PostData> getFollowingFeed(String username, Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
@@ -178,7 +182,7 @@ public class PostService {
 
     public FileObject getImage(Long imageId){
         FileObject fileObject = new FileObject();
-        Path path = Paths.get(UPLOAD_DIR + imageId);
+        Path path = Paths.get(UPLOAD_DIR, String.valueOf(imageId));
         if(Files.exists(path)){
             try {
                 byte[] file = Files.readAllBytes(path);
@@ -191,14 +195,14 @@ public class PostService {
             }
 
         } else {
-            throw new RuntimeException();
+            throw new InvalidDataException("File with this id doesnt exist");
         }
         return fileObject;
     }
 
-    public PostEntity uploadPost(MultipartFile image, PostData post, String username) {
+    public PostData uploadPost(MultipartFile image, PostData post, String username) {
         Long imageId = null;
-        if(!image.isEmpty()){
+        if(image != null){
             try {
                 Path uploadPath = Paths.get(UPLOAD_DIR);
                 if (!Files.exists(uploadPath)) {
@@ -212,7 +216,7 @@ public class PostService {
                 byte[] imageBytes = image.getBytes();
                 Random random = new Random();
                 do {
-                    imageId = random.nextLong();
+                    imageId = Math.abs(random.nextLong());
                 } while (postRepository.findByImageId(imageId).isPresent());
                 String name = Long.toString(imageId);
                 Path path = uploadPath.resolve(name);
@@ -224,18 +228,22 @@ public class PostService {
         Long postId;
         Random random = new Random();
         do {
-            postId = random.nextLong();
+            postId = Math.abs(random.nextLong());
         } while (postRepository.existsById(postId));
 
         PostEntity postEntity = new PostEntity();
         postEntity.setId(postId);
         postEntity.setImageId(imageId);
+        postEntity.setReplyCount(0L);
+        postEntity.setLikeCount(0L);
+        postEntity.setReyeetCount(0L);
+        postEntity.setReported(false);
         postEntity.setUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new));
         postEntity.setText(post.getText());
         if(imageId != null) postEntity.setImageId(imageId);
         postEntity.setTimestamp(new Date());
-        postRepository.save(postEntity);
-        return postEntity;
+        PostEntity saved = postRepository.save(postEntity);
+        return getPostById(saved.getId());
     }
 
     public void deletePost(String username, Long postId){

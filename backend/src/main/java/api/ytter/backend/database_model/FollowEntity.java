@@ -1,9 +1,11 @@
 package api.ytter.backend.database_model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
 
 @Setter
+@Getter
 @Entity
 @Table(name="follow")
 public class FollowEntity {

@@ -2,8 +2,10 @@ package api.ytter.backend.database_repository;
 
 import api.ytter.backend.database_model.CommentEntity;
 import api.ytter.backend.database_model.PostEntity;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,13 +24,15 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
     List<CommentEntity> findAllByUser(String user, Pageable pageable);
 
-    @Query(value = "DELETE FROM comments WHERE rootPost = :postId", nativeQuery = true)
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM comments WHERE root_post = :postId", nativeQuery = true)
     void deleteAllByRootPostId(Long postId);
 
     @Query(value = """
             SELECT *
             FROM comments
-            WHERE replyToComment.id = :replyToCommentId
+            WHERE reply_to_comment = :replyToCommentId
             """, nativeQuery = true)
     List<CommentEntity> findByReplyToCommentId(Long replyToCommentId);
 

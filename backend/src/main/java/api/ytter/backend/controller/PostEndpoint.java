@@ -68,7 +68,7 @@ public class PostEndpoint {
     }
 
     @PostMapping("/posts/upload")
-    ResponseEntity<PostEntity> uploadPost(@RequestAttribute String username,
+    ResponseEntity<PostData> uploadPost(@RequestAttribute String username,
                                           @RequestPart(value = "file", required = false) MultipartFile image,
                                           @RequestPart(value = "post") PostData post){
         return new ResponseEntity<>(postService.uploadPost(image, post, username), HttpStatus.OK);
