@@ -15,17 +15,17 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     @Query(value = """
             SELECT * FROM notifications
-            WHERE user_id = :userEntity.id
-            AND read = false
-            ORDER BY timestamp DESC
+            WHERE user_id = :userId
+            AND is_read = false
+            ORDER BY timestamp_ DESC
             """, nativeQuery = true)
-    List<NotificationEntity> findByUserAndNotRead(@Param("userEntity") UserEntity userEntity);
+    List<NotificationEntity> findByUserAndNotRead(@Param("userId") Long userID);
 
     @Query(value = """
             SELECT * FROM notifications
-            WHERE user_id = :userEntity.id
-            AND read = true
-            ORDER BY timestamp DESC
+            WHERE user_id = :userId
+            AND is_read = true
+            ORDER BY timestamp_ DESC
             """, nativeQuery = true)
-    List<NotificationEntity> findByUserAndRead(@Param("userEntity") UserEntity userEntity);
+    List<NotificationEntity> findByUserAndRead(@Param("userId") Long userId);
 }

@@ -18,8 +18,8 @@ public class NotificationService {
 
     public List<NotificationData> getAllNotifications(String username) {
         UserEntity user = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        List<NotificationEntity> unreadNotifications = notificationRepository.findByUserAndNotRead(user);
-        List<NotificationEntity> readNotifications = notificationRepository.findByUserAndRead(user);
+        List<NotificationEntity> unreadNotifications = notificationRepository.findByUserAndNotRead(user.getId());
+        List<NotificationEntity> readNotifications = notificationRepository.findByUserAndRead(user.getId());
         readNotifications.forEach(notificationEntity -> {
             notificationEntity.setRead(true);
             notificationRepository.save(notificationEntity);
@@ -39,7 +39,7 @@ public class NotificationService {
 
     public List<NotificationData> getUnreadNotifications(String username) {
         UserEntity user = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        List<NotificationEntity> notificationEntities = notificationRepository.findByUserAndNotRead(user);
+        List<NotificationEntity> notificationEntities = notificationRepository.findByUserAndNotRead(user.getId());
 
         List<NotificationData> notifications = notificationEntities.stream()
                 .map(notificationEntity -> new NotificationData(
@@ -60,7 +60,12 @@ public class NotificationService {
     }
 
     public Integer getUnreadNotificationCount(String username) {
-        return Math.toIntExact(notificationRepository.findByUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new)).size());
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(RuntimeException::new);
+        return Math.toIntExact(notificationRepository.findByUser(user)
+                .stream()
+                .filter(NotificationEntity::getRead)
+                .count());
     }
 
     private void deleteOldNotifications(UserEntity userEntity) {

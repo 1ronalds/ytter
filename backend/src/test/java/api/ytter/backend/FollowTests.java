@@ -43,13 +43,6 @@ public class FollowTests {
                 .andReturn().getResponse().getHeader("Authorization");
     }
 
-    /*
-    @PostMapping("/profile/{username}/follow")
-    @DeleteMapping("/profile/{username}/follow")
-    @GetMapping("/profile/{username}/following")
-    @GetMapping("/profile/{username}/followers")
-    */
-
     @BeforeEach
     void setUp(){
         String passwordHash = passwordEncoder.encode("password123");

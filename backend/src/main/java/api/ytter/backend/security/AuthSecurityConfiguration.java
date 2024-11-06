@@ -85,6 +85,11 @@ public class AuthSecurityConfiguration{
                         .requestMatchers(HttpMethod.DELETE, "/posts/*/ry").authenticated()
                         .requestMatchers(HttpMethod.GET, "/reyeet-feed").authenticated()
                         .requestMatchers(HttpMethod.GET, "/reyeets/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/report/post/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/report/comment/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/report").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/report/post/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/report/comment/*").authenticated()
                         .anyRequest().denyAll());
         return http.build();
     }

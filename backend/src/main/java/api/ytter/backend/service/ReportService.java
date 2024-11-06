@@ -62,13 +62,18 @@ public class ReportService {
 
     public void ignoreReportPost(String username, Long postId) {
         if (userRepository.findByUsername(username).get().getIsAdmin()) {
+            PostEntity postEntity = postRepository.findById(postId).orElseThrow(()->new InvalidDataException("Post doesnt exist"));
+            postEntity.setReported(false);
+            postRepository.save(postEntity);
 
         }
     }
 
     public void ignoreReportComment(String username, Long commentId) {
         if (userRepository.findByUsername(username).get().getIsAdmin()) {
-
+            CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(()->new InvalidDataException("Comment doesnt exist"));
+            commentEntity.setReported(false);
+            commentRepository.save(commentEntity);
         }
     }
 }

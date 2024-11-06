@@ -36,7 +36,7 @@ public class FollowService {
         NotificationEntity notificationEntity= new NotificationEntity();
         notificationEntity.setDescription(follower.concat(" has started following you."));
         notificationEntity.setUser(followingEntity);
-        notificationEntity.setLink("ytter.lv/posts/profile/".concat(follower));
+        notificationEntity.setLink("https://ytter.lv/posts/profile/".concat(follower));
         notificationEntity.setRead(false);
         notificationEntity.setTimestamp(new Date());
         notificationRepository.save(notificationEntity);

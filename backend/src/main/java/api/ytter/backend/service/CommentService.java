@@ -108,8 +108,8 @@ public class CommentService {
         notificationEntity.setUser(commentEntity.getReplyToComment() == null ?
                 commentEntity.getRootPost().getUser() : commentEntity.getReplyToComment().getUser());
         notificationEntity.setLink(commentEntity.getReplyToComment() == null ?
-                "/comment/to-post/".concat(String.valueOf(commentEntity.getRootPost().getId()))
-                : "/comment/to-comment/".concat(String.valueOf(commentEntity.getReplyToComment().getId())));
+                "https://ytter.lv/comment/to-post/".concat(String.valueOf(commentEntity.getRootPost().getId()))
+                : "https://ytter.lv/comment/to-comment/".concat(String.valueOf(commentEntity.getReplyToComment().getId())));
         notificationEntity.setRead(false);
         notificationEntity.setTimestamp(new Date());
         notificationRepository.save(notificationEntity);

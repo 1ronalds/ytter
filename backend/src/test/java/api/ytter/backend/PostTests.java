@@ -116,7 +116,9 @@ public class PostTests {
         jdbcTemplate.execute("""
                 INSERT INTO follow (follower_id, following_id)
                 VALUES (1, 2)""");
-
+        if (!Files.exists(Paths.get("./testuploads"))) {
+            Files.createDirectories(Paths.get("./testuploads"));
+        }
 
     }
 

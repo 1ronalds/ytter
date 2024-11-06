@@ -1,9 +1,7 @@
 package api.ytter.backend.database_repository;
 
 import api.ytter.backend.database_model.CommentEntity;
-import api.ytter.backend.database_model.PostEntity;
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,8 +19,6 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     List<CommentEntity> findAllAsReplyToPost(@Param("rootPostId") Long postId);
 
     List<CommentEntity> findAllByReplyToComment_Id(Long commentId);
-
-    List<CommentEntity> findAllByUser(String user, Pageable pageable);
 
     @Modifying
     @Transactional

@@ -11,7 +11,9 @@ import java.util.List;
 
 @Repository
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
-    @Query("SELECT f FROM FollowEntity f WHERE f.follower.username = :followerUsername AND f.following.username = :followingUsername")
+    @Query(value = """
+    SELECT * FROM follow WHERE follower_id = (SELECT id FROM users WHERE username = :followerUsername) 
+    AND following_id = (SELECT id FROM users WHERE username = :followingUsername)""", nativeQuery = true)
     FollowEntity findByFollowerAndFollowing(@Param("followerUsername") String followerUsername,
                                             @Param("followingUsername") String followingUsername);
 
