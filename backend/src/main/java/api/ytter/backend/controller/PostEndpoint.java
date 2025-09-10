@@ -21,17 +21,18 @@ public class PostEndpoint {
     private final PostService postService;
 
     @GetMapping("/posts/profile/{username}")
-    ResponseEntity<List<PostData>> getPostsByUsername(@PathVariable String username,
+    ResponseEntity<List<PostData>> getPostsByUsername(@RequestAttribute(name="username", required = false) String requester,
+                                                      @PathVariable String username,
                                                       @RequestParam Integer limit,
                                                       @RequestParam Integer offset){
-        return new ResponseEntity<List<PostData>>(postService.getPostsByUsername(username, limit, offset), HttpStatus.OK);
+        return new ResponseEntity<List<PostData>>(postService.getPostsByUsername(requester, username, limit, offset), HttpStatus.OK);
     }
 
     @GetMapping("/posts/by-me")
     ResponseEntity<List<PostData>> getPostsByMe(@RequestAttribute String username,
                                                 @RequestParam Integer limit,
                                                 @RequestParam Integer offset){
-        return new ResponseEntity<>(postService.getPostsByUsername(username, limit, offset), HttpStatus.OK);
+        return new ResponseEntity<>(postService.getPostsByUsername(username, username, limit, offset), HttpStatus.OK);
     }
 
 
@@ -43,34 +44,38 @@ public class PostEndpoint {
     }
 
     @GetMapping("/posts/top/this-week")
-    ResponseEntity<List<PostData>> getTopPostsThisWeek(@RequestParam Integer limit,
+    ResponseEntity<List<PostData>> getTopPostsThisWeek(@RequestAttribute(name="username", required = false) String requester,
+                                                       @RequestParam Integer limit,
                                                        @RequestParam Integer offset){
-        return new ResponseEntity<>(postService.getTopPostsPast7Days(limit, offset), HttpStatus.OK);
+        return new ResponseEntity<>(postService.getTopPostsPast7Days(requester, limit, offset), HttpStatus.OK);
     }
 
 
     @GetMapping("/posts/top/this-month")
-    ResponseEntity<List<PostData>> getTopPostsThisMonth(@RequestParam Integer limit,
+    ResponseEntity<List<PostData>> getTopPostsThisMonth(@RequestAttribute(name="username", required = false) String requester,
+                                                        @RequestParam Integer limit,
                                                         @RequestParam Integer offset){
-        return new ResponseEntity<>(postService.getTopPostsPast30Days(limit, offset), HttpStatus.OK);
+        return new ResponseEntity<>(postService.getTopPostsPast30Days(requester, limit, offset), HttpStatus.OK);
     }
 
 
     @GetMapping("/posts/new")
-    ResponseEntity<List<PostData>> getNewPosts(@RequestParam Integer limit,
+    ResponseEntity<List<PostData>> getNewPosts(@RequestAttribute(name="username", required = false) String requester,
+                                               @RequestParam Integer limit,
                                                @RequestParam Integer offset){
-        return new ResponseEntity<List<PostData>>(postService.getNewPosts(limit, offset), HttpStatus.OK);
+        return new ResponseEntity<List<PostData>>(postService.getNewPosts(requester, limit, offset), HttpStatus.OK);
     }
 
     @GetMapping("/posts/by-id/{post-id}")
-    ResponseEntity<PostData> getPostById(@PathVariable("post-id") Long postId){
-        return new ResponseEntity<PostData>(postService.getPostById(postId), HttpStatus.OK);
+    ResponseEntity<PostData> getPostById(@RequestAttribute(name="username", required = false) String requester,
+                                         @PathVariable("post-id") Long postId){
+        return new ResponseEntity<PostData>(postService.getPostById(requester, postId), HttpStatus.OK);
     }
 
-    @PostMapping("/posts/upload")
+    @PostMapping(value = "/posts/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<PostData> uploadPost(@RequestAttribute String username,
-                                          @RequestPart(value = "file", required = false) MultipartFile image,
-                                          @RequestPart(value = "post") PostData post){
+                                          @RequestPart(name = "file", required = false) MultipartFile image,
+                                          @RequestPart(name = "post") PostData post){
         return new ResponseEntity<>(postService.uploadPost(image, post, username), HttpStatus.OK);
     }
 
@@ -88,6 +93,4 @@ public class PostEndpoint {
         postService.deletePost(username, postId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
-
 }

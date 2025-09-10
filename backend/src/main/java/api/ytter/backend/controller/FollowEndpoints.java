@@ -26,6 +26,11 @@ public class FollowEndpoints {
         return new ResponseEntity<Void>(HttpStatus.OK);
     }
 
+    @GetMapping("/profile/{username}/amifollowing")
+    public ResponseEntity<Boolean> getIsFollowing(@RequestAttribute("username") String requester, @PathVariable String username){
+        return new ResponseEntity<Boolean>(followService.getIsFollowing(requester, username),HttpStatus.OK);
+    }
+
     @GetMapping("/profile/{username}/following")
     public ResponseEntity<List<ProfilePublicData>> getFollowing(@PathVariable String username){
         return new ResponseEntity<List<ProfilePublicData>>(followService.getFollowingList(username),HttpStatus.OK);

@@ -58,28 +58,31 @@ public class LikeTests {
     @BeforeEach
     void setUp() {
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM comments");
         jdbcTemplate.execute("DELETE FROM likes");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('user2', 'user', '%s', 'user@test.com', true, false)""", passwordHash));
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (2234, 1, 'already liked post', 0, null, '%s', 2, 0, false)""", getTodayDateTimeMinus20Min()));
+                VALUES (2234, %s, 'already liked post', 0, null, '%s', 2, 0, false)""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (1234, 1, 'not already liked post', 0, null, '%s', 1, 0, false)""", getTodayDateTime()));
+                VALUES (1234, %s, 'not already liked post', 0, null, '%s', 1, 0, false)""", userId1, getTodayDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (5321, 1, 1234, null, 'already liked comment', 0, 0, '%s', false)""", getTodayDateTimeMinus20Min()));
+                VALUES (5321, %s, 1234, null, 'already liked comment', 0, 0, '%s', false)""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (6321, 1, 1234, null, 'not already liked comment', 0, 0, '%s', false)""", getTodayDateTime()));
+                VALUES (6321, %s, 1234, null, 'not already liked comment', 0, 0, '%s', false)""", userId1, getTodayDateTime()));
         jdbcTemplate.execute("INSERT INTO likes (post_id, comment_id, user_id) VALUES (null, 5321, 1)");
         jdbcTemplate.execute("INSERT INTO likes (post_id, comment_id, user_id) VALUES (2234, null, 1)");
     }

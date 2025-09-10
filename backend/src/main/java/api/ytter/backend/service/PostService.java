@@ -1,5 +1,6 @@
 package api.ytter.backend.service;
 
+import api.ytter.backend.database_model.CommentEntity;
 import api.ytter.backend.database_model.PostEntity;
 import api.ytter.backend.database_model.UserEntity;
 import api.ytter.backend.database_repository.*;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +27,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class PostService {
-    private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png", "image/bmp", "image/webp");
+    private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png", "image/bmp");
     private static final Map<String, String> magicNumbers = new HashMap<>();
     private static final Map<String, String> mimeExtension = new HashMap<>();
     private final Tika tika = new Tika();
@@ -38,12 +40,10 @@ public class PostService {
         magicNumbers.put("FFD8FF", "jpg");
         magicNumbers.put("89504E47", "png");
         magicNumbers.put("424D", "bmp");
-        magicNumbers.put("52494646", "webp");
 
         mimeExtension.put("jpg", "image/jpeg");
         mimeExtension.put("png", "image/png");
         mimeExtension.put("bmp", "image/bmp");
-        mimeExtension.put("webp", "image/webp");
     }
 
 
@@ -57,7 +57,7 @@ public class PostService {
         return posts.stream()
                 .map(postEntity -> new PostData(postEntity.getId(),
                 new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
-                postEntity.getImageId(),
+                postEntity.getImageId() != null ? postEntity.getImageId().toString() : null,
                 postEntity.getReplyCount(),
                 postEntity.getLikeCount(),
                 postEntity.getReyeetCount(),
@@ -69,49 +69,55 @@ public class PostService {
 
     }
 
-    public List<PostData> getPostsByUsername(String username, Integer limit, Integer offset ){
+    public List<PostData> getPostsByUsername(String requester, String username, Integer limit, Integer offset ){
         Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
         return postRepository.findByUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), pageable)
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
                         new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
-                        postEntity.getImageId(),
+                        postEntity.getImageId() != null ? postEntity.getImageId().toString() : null,
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
                         postEntity.getReyeetCount(),
                         postEntity.getText(),
                         postEntity.getTimestamp(),
-                        likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
+                        requester != null && likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent(),
+                        requester != null && reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent()
                         ))
                 .toList();
     }
 
 
 
-    public List<PostData> getTopPostsPast7Days(Integer limit, Integer offset){
+    public List<PostData> getTopPostsPast7Days(String requester, Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = now.minusDays(7);
 
         return postRepository.findAllByDateRangeSortedByLikes(startDate, now, pageable)
                 .stream()
-                .map(postEntity -> new PostData(
+                .map(postEntity -> {
+                    if(requester!=null) {
+                        System.out.println("DBG");
+                        System.out.println(likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent());
+                    }
+                    return new PostData(
                         postEntity.getId(),
                         new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
-                        postEntity.getImageId(),
+                        postEntity.getImageId() != null ? postEntity.getImageId().toString() : null,
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
                         postEntity.getReyeetCount(),
                         postEntity.getText(),
                         postEntity.getTimestamp(),
-                        likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
-                )).toList();
+                        requester != null && likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent(),
+                        requester != null && reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent()
+                        );}).toList();
+
     }
 
-    public List<PostData> getTopPostsPast30Days(Integer limit, Integer offset){
+    public List<PostData> getTopPostsPast30Days(String requester, Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = now.minusDays(30);
@@ -121,43 +127,49 @@ public class PostService {
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
                         new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
-                        postEntity.getImageId(),
+                        postEntity.getImageId() != null ? postEntity.getImageId().toString() : null,
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
                         postEntity.getReyeetCount(),
                         postEntity.getText(),
                         postEntity.getTimestamp(),
-                        likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
+                        requester != null && likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent(),
+                        requester != null && reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent()
+
                 )).toList();
     }
 
-    public List<PostData> getNewPosts(Integer limit, Integer offset){
+    public List<PostData> getNewPosts(String requester, Integer limit, Integer offset){
         Pageable pageable = PageRequest.of(offset, limit);
         return postRepository.findAllByOrderByTimestamp_Desc(pageable)
                 .stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
                         new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
-                        postEntity.getImageId(),
+                        postEntity.getImageId() != null ? postEntity.getImageId().toString() : null,
                         postEntity.getReplyCount(),
                         postEntity.getLikeCount(),
                         postEntity.getReyeetCount(),
                         postEntity.getText(),
                         postEntity.getTimestamp(),
-                        likeRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent(),
-                        reyeetRepository.findByUserAndPost(postEntity.getUser(), postEntity).isPresent()
+                        requester != null && likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent(),
+                        requester != null && reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent()
+
                 )).toList();
     }
 
-    public PostData getPostById(Long PostId){
+    public PostData getPostById(String requester, Long PostId){
         PostData postData = new PostData();
         PostEntity postEntity = postRepository.findById(PostId).orElseThrow(RuntimeException::new);
         postData.setPostId(postEntity.getId());
-        postData.setProfileDataPublic(new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()));
-        postData.setImageId(postEntity.getImageId());
+        postData.setProfilePublicData(new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()));
+        postData.setImageId(postEntity.getImageId() != null ? postEntity.getImageId().toString() : null);
         postData.setTimestamp(postEntity.getTimestamp());
         postData.setText(postEntity.getText());
+        if(requester != null){
+            postData.setLiked(likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent());
+            postData.setReyeeted(reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent());
+        }
         return postData;
     }
 
@@ -243,17 +255,37 @@ public class PostService {
         if(imageId != null) postEntity.setImageId(imageId);
         postEntity.setTimestamp(new Date());
         PostEntity saved = postRepository.save(postEntity);
-        return getPostById(saved.getId());
+        return getPostById(null, saved.getId());
     }
 
     public void deletePost(String username, Long postId){
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         if(postRepository.findById(postId).get().getUser().equals(userEntity) || userEntity.getIsAdmin()){
-            commentRepository.deleteAllByRootPostId(postId);
-            postRepository.deleteById(postId);
-
+            likeRepository.deleteByPostId(postId);
+            commentRepository.findAllByRootPostId(postId).stream().forEach(commentEntity -> {
+                likeRepository.deleteByCommentId(commentEntity.getId());});
+            reyeetRepository.deleteReyeetsByPostId(postId);
+            deletePostAndChildren(postId);
         } else {
             throw new InvalidDataException("Not your post, not admin");
         }
+    }
+    @Transactional
+    public void deletePostAndChildren(Long postId) {
+        PostEntity post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        for (CommentEntity child : commentRepository.findAllAsReplyToPost(postId)) {
+            deleteCommentAndChildren(child.getId());
+        }
+        postRepository.delete(post);
+    }
+
+    @Transactional
+    public void deleteCommentAndChildren(Long commentId){
+        CommentEntity comment = commentRepository.findById(commentId).orElseThrow();
+        for(CommentEntity child: commentRepository.findAllByReplyToComment_Id(commentId)){
+            deleteCommentAndChildren(child.getId());
+        }
+        commentRepository.delete(comment);
     }
 }

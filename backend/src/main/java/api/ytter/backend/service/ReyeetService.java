@@ -35,6 +35,8 @@ public class ReyeetService {
             reyeetEntity.setUser(userEntity);
             reyeetEntity.setPost(postEntity);
             reyeetRepository.save(reyeetEntity);
+            postEntity.setReyeetCount(postEntity.getReyeetCount()+1);
+            postRepository.save(postEntity);
         } else {
             throw new RuntimeException();
         }
@@ -45,6 +47,8 @@ public class ReyeetService {
         PostEntity postEntity = postRepository.findById(postId).orElseThrow(() -> new InvalidDataException("Post doesnt exist"));
         ReyeetEntity reyeetEntity = reyeetRepository.findByUserAndPost(userEntity, postEntity).orElseThrow(RuntimeException::new);
         reyeetRepository.delete(reyeetEntity);
+        postEntity.setReyeetCount(postEntity.getReyeetCount()-1);
+        postRepository.save(postEntity);
     }
 
     public List<ReyeetPostData> getFollowingReyeetFeed(String username, Integer limit, Integer offset) {
@@ -52,7 +56,7 @@ public class ReyeetService {
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUserFollowing(userEntity.getId(), pageable);
         return reyeetEntityList.stream().map(reyeetEntity -> new ReyeetPostData(
-                reyeetEntity.getPost().getId(),
+                reyeetEntity.getPost().getId().toString(),
                 new ProfilePublicData(reyeetEntity.getPost().getUser().getUsername(), reyeetEntity.getPost().getUser().getName()),
                 reyeetEntity.getPost().getImageId(),
                 reyeetEntity.getPost().getReplyCount(),
@@ -60,18 +64,18 @@ public class ReyeetService {
                 reyeetEntity.getPost().getReyeetCount(),
                 reyeetEntity.getPost().getText(),
                 reyeetEntity.getPost().getTimestamp(),
-                likeRepository.findByUserAndPost(reyeetEntity.getPost().getUser(), reyeetEntity.getPost()).isPresent(),
-                reyeetRepository.findByUserAndPost(reyeetEntity.getPost().getUser(), reyeetEntity.getPost()).isPresent(),
+                likeRepository.findByUserAndPost(userRepository.findByUsername(username).orElseThrow(), reyeetEntity.getPost()).isPresent(),
+                reyeetRepository.findByUserAndPost(userRepository.findByUsername(username).orElseThrow(), reyeetEntity.getPost()).isPresent(),
                 reyeetEntity.getUser().getName()
         )).toList();
     }
 
-    public List<ReyeetPostData> getReyeetsByUser(String username, Integer limit, Integer offset) {
+    public List<ReyeetPostData> getReyeetsByUser(String requester, String username, Integer limit, Integer offset) {
         Pageable pageable = PageRequest.of(offset, limit);
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUser(userEntity, pageable);
         return reyeetEntityList.stream().map(reyeetEntity -> new ReyeetPostData(
-                reyeetEntity.getPost().getId(),
+                reyeetEntity.getPost().getId().toString(),
                 new ProfilePublicData(reyeetEntity.getPost().getUser().getUsername(), reyeetEntity.getPost().getUser().getName()),
                 reyeetEntity.getPost().getImageId(),
                 reyeetEntity.getPost().getReplyCount(),
@@ -79,8 +83,8 @@ public class ReyeetService {
                 reyeetEntity.getPost().getReyeetCount(),
                 reyeetEntity.getPost().getText(),
                 reyeetEntity.getPost().getTimestamp(),
-                likeRepository.findByUserAndPost(reyeetEntity.getPost().getUser(), reyeetEntity.getPost()).isPresent(),
-                reyeetRepository.findByUserAndPost(reyeetEntity.getPost().getUser(), reyeetEntity.getPost()).isPresent(),
+                requester != null ? likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), reyeetEntity.getPost()).isPresent() : null,
+                requester != null ? reyeetRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), reyeetEntity.getPost()).isPresent() : null,
                 reyeetEntity.getUser().getName()
         )).toList();
     }

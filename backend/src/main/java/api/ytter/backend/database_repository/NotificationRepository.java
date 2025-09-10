@@ -11,6 +11,12 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
 
+    @Query(value = "SELECT COUNT(*) FROM notifications WHERE user_id = :userId AND is_read = false ORDER BY timestamp_ DESC ", nativeQuery = true)
+    Long getUnreadCount(@Param("userId")Long userId);
+
+    @Query(value = "SELECT * FROM notifications WHERE user_id = :userId ORDER BY timestamp_ DESC", nativeQuery = true)
+    List<NotificationEntity> findAllByUser(@Param("userId") Long userId);
+
     List<NotificationEntity> findByUser(UserEntity userEntity);
 
     @Query(value = """

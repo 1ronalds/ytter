@@ -4,6 +4,7 @@ import api.ytter.backend.model.CommentData;
 import api.ytter.backend.model.LoginData;
 import api.ytter.backend.model.PostData;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,23 +61,27 @@ public class CommentTests {
 
     @BeforeEach
     void setUp(){
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+        jdbcTemplate.execute("DELETE FROM comments");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM users");
-        jdbcTemplate.execute("DELETE FROM comments");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+
 
         String passwordHash = passwordEncoder.encode("password123");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
+        Long userId = jdbcTemplate.queryForObject(String.format("SELECT id FROM users WHERE username = '%s'", "ronalds"), Long.class);
         jdbcTemplate.execute(String.format("""
-                INSERT INTO POSTS (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (1234, 1, 'Hello, this is my post', 0, null, '%s', 1, 0, false)""", getTodayDateTime()));
-        jdbcTemplate.execute(String.format("""
-                INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (4321, 1, 1234, null, 'my comment to post', 1, 0, '%s', false)""", getTodayDateTime()));
+                INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
+                VALUES (1234, %s, 'Hello, this is my post', 0, null, '%s', 1, 0, false)""", userId, getTodayDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (5321, 1, 1234, 4321, 'my comment to comment', 0, 0, '%s', false)""", getTodayDateTime()));
+                VALUES (4321, %s, 1234, null, 'my comment to post', 1, 0, '%s', false)""", userId, getTodayDateTime()));
+        jdbcTemplate.execute(String.format("""
+                INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
+                VALUES (5321, %s, 1234, 4321, 'my comment to comment', 0, 0, '%s', false)""", userId, getTodayDateTime()));
     }
 
     @Test
@@ -145,7 +150,7 @@ public class CommentTests {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM comments WHERE root_post = 1234", Integer.class);
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM comments WHERE id = 5321", Integer.class);
         assertThat(count).isEqualTo(0);
     }
 
@@ -158,8 +163,8 @@ public class CommentTests {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        String comment = jdbcTemplate.queryForObject("SELECT comment FROM comments WHERE id = 4321", String.class);
-        assertThat(comment).isEqualTo("[deleted]");
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM comments WHERE id = 4321", Integer.class);
+        assertThat(count).isEqualTo(0);
     }
 
 }

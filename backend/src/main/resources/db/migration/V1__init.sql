@@ -73,8 +73,8 @@ CREATE TABLE follow (
 CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    description varchar(50) NOT NULL,
-    link varchar(50) NOT NULL,
+    description varchar(1000) NOT NULL,
+    link varchar(100) NOT NULL,
     is_read BOOL NOT NULL,
     timestamp_ DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)

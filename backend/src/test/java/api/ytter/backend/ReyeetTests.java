@@ -60,24 +60,28 @@ public class ReyeetTests {
     @BeforeEach
     void setUp(){
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM reyeet");
         jdbcTemplate.execute("DELETE FROM follow");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('user2', 'user', '%s', 'user@test.com', true, false)""", passwordHash));
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Long userId2 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'user2'", Long.class);
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (2234, 1, 'Hello, my 1st post', 0, null, '%s', 2, 0, false)""", getTodayDateTimeMinus20Min()));
+                VALUES (2234, %s, 'Hello, my 1st post', 0, null, '%s', 2, 0, false)""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (1234, 1, 'Hello, my 2nd post', 0, null, '%s', 1, 0, false)""", getTodayDateTime()));
-        jdbcTemplate.execute("INSERT INTO reyeet (user_id, post_id) VALUES (1, 2234)");
-        jdbcTemplate.execute("INSERT INTO follow (follower_id, following_id) VALUES (2, 1)");
+                VALUES (1234, %s, 'Hello, my 2nd post', 0, null, '%s', 1, 0, false)""", userId1, getTodayDateTime()));
+        jdbcTemplate.execute(String.format("INSERT INTO reyeet (user_id, post_id) VALUES (%s, 2234)", userId1));
+        jdbcTemplate.execute(String.format("INSERT INTO follow (follower_id, following_id) VALUES (%s, %s)", userId2, userId1));
     }
 
     @Test
@@ -88,8 +92,8 @@ public class ReyeetTests {
                 .header("Authorization", JWTtoken))
                 .andDo(print())
                 .andExpect(status().isOk());
-
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM reyeet WHERE user_id = 1 AND post_id = 1234", Integer.class);
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Integer count = jdbcTemplate.queryForObject(String.format("SELECT COUNT(*) FROM reyeet WHERE user_id = %s AND post_id = 1234", userId1), Integer.class);
         assertThat(count).isEqualTo(1);
     }
 
@@ -101,8 +105,8 @@ public class ReyeetTests {
                         .header("Authorization", JWTtoken))
                 .andDo(print())
                 .andExpect(status().isOk());
-
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM reyeet WHERE user_id = 1 AND post_id = 2234", Integer.class);
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Integer count = jdbcTemplate.queryForObject(String.format("SELECT COUNT(*) FROM reyeet WHERE user_id = %s AND post_id = 2234", userId1), Integer.class);
         assertThat(count).isEqualTo(0);
     }
 

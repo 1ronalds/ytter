@@ -1,6 +1,8 @@
 package api.ytter.backend.model;
 
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,9 +20,10 @@ public class PostData {
         this.text = text;
     }
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long postId;
-    private ProfilePublicData profileDataPublic;
-    private Long imageId;
+    private ProfilePublicData profilePublicData;
+    private String imageId;
     private Long replyCount;
     private Long likeCount;
     private Long reyeetCount;

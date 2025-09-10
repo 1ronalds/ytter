@@ -36,4 +36,14 @@ public class AuthEndpoints {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/whatismyname")
+    public ResponseEntity<String> getNameOfUsername(@RequestAttribute String username){
+        return new ResponseEntity<String>(authService.getNameOfUsername(username), HttpStatus.OK);
+    }
+
+    @GetMapping("/doesuserexist/{username}")
+    public ResponseEntity<Boolean> doesUserExist(@PathVariable String username){
+        return new ResponseEntity<>(authService.getDoesUserExist(username), HttpStatus.OK);
+    }
+
 }

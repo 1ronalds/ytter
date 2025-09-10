@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -35,7 +36,7 @@ public class CommentService {
                 commentEntity.getComment(), commentEntity.getTimestamp(), false)).orElseThrow(()-> new InvalidDataException("Comment with this id doesnt exist"));
     }
 
-    public List<CommentData> getCommentsToPost(Long postId){
+    public List<CommentData> getCommentsToPost(String username, Long postId){
         return commentRepository.findAllAsReplyToPost(postId)
                 .stream()
                 .map(commentEntity -> new CommentData(
@@ -47,13 +48,13 @@ public class CommentService {
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
                         commentEntity.getTimestamp(),
-                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent()
+                        username != null ? likeRepository.findByUserAndComment(userRepository.findByUsername(username).orElseThrow(), commentEntity).isPresent() : null
                         ))
                 .toList();
     }
 
 
-    public List<CommentData> getCommentsToComment(Long commentId){
+    public List<CommentData> getCommentsToComment(String username, Long commentId){
         return commentRepository.findAllByReplyToComment_Id(commentId)
                 .stream()
                 .map(commentEntity -> new CommentData(
@@ -65,7 +66,7 @@ public class CommentService {
                         commentEntity.getReplyCount(),
                         commentEntity.getComment(),
                         commentEntity.getTimestamp(),
-                        likeRepository.findByUserAndComment(commentEntity.getUser(), commentEntity).isPresent()
+                        username != null ? likeRepository.findByUserAndComment(userRepository.findByUsername(username).orElseThrow(), commentEntity).isPresent() : null
                 )).toList();
     }
 
@@ -104,12 +105,19 @@ public class CommentService {
         commentData.setCommentId(postId);
 
         NotificationEntity notificationEntity = new NotificationEntity();
-        notificationEntity.setDescription("Your comment/post has a reply");
+        String replyToText = "";
+        Boolean post = null;
+        if(replyTo != null){
+            replyToText = replyTo.getComment();
+            post = false;
+        } else {
+            replyToText = rootPost.getText();
+            post = true;
+        }
+        notificationEntity.setDescription((post ? "post" : "comment") + " \"" + replyToText + "\" has reply: \"" + commentData.getComment() + "\"");
         notificationEntity.setUser(commentEntity.getReplyToComment() == null ?
                 commentEntity.getRootPost().getUser() : commentEntity.getReplyToComment().getUser());
-        notificationEntity.setLink(commentEntity.getReplyToComment() == null ?
-                "https://ytter.lv/comment/to-post/".concat(String.valueOf(commentEntity.getRootPost().getId()))
-                : "https://ytter.lv/comment/to-comment/".concat(String.valueOf(commentEntity.getReplyToComment().getId())));
+        notificationEntity.setLink("11");
         notificationEntity.setRead(false);
         notificationEntity.setTimestamp(new Date());
         notificationRepository.save(notificationEntity);
@@ -120,15 +128,28 @@ public class CommentService {
     public void deleteComment(String username, Long commentId) {
         CommentEntity deletableComment = commentRepository.findById(commentId).orElseThrow(() -> new InvalidDataException("Deletable comment doesnt exist"));
         if (deletableComment.getUser().getUsername().equals(username) || userRepository.findByUsername(username).get().getIsAdmin()) {
-            if (!commentRepository.findByReplyToCommentId(deletableComment.getId()).isEmpty()) {
-                deletableComment.setComment("[deleted]");
-                deletableComment.setUser(null);
-                commentRepository.save(deletableComment);
+            if(deletableComment.getReplyToComment() == null){
+                PostEntity postEntity = deletableComment.getRootPost();
+                postEntity.decreaseReplyCount();
+                postRepository.save(postEntity);
             } else {
-                commentRepository.delete(deletableComment);
+                CommentEntity commentEntity = commentRepository.findById(deletableComment.getReplyToComment().getId()).orElseThrow();
+                commentEntity.decreaseReplyCount();
+                commentRepository.save(commentEntity);
             }
+            deleteCommentAndChildren(commentId);
         } else {
             throw new InvalidDataException("Not your comment and not admin");
         }
+    }
+
+    @Transactional
+    public void deleteCommentAndChildren(Long commentId){
+        CommentEntity comment = commentRepository.findById(commentId).orElseThrow();
+        for(CommentEntity child: commentRepository.findAllByReplyToComment_Id(commentId)){
+            deleteCommentAndChildren(child.getId());
+        }
+        likeRepository.deleteByCommentId(comment.getId());
+        commentRepository.delete(comment);
     }
 }

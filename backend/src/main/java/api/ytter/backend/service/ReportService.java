@@ -53,7 +53,7 @@ public class ReportService {
                 String message = (o instanceof PostEntity) ? ((PostEntity) o).getText() : ((CommentEntity) o).getComment();
                 Long postId = (o instanceof PostEntity) ? ((PostEntity) o).getId() : null;
                 Long commentId = (o instanceof CommentEntity) ? ((CommentEntity) o).getId() : null;
-                return new FlagData(message, postId, commentId);
+                return new FlagData(message, postId != null ? postId.toString() : "", commentId != null ? commentId.toString() : "");
             }).toList();
         } else {
             throw new InvalidDataException("Not admin");

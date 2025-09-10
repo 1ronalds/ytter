@@ -20,9 +20,13 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -45,10 +49,23 @@ public class AuthSecurityConfiguration{
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+                    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+                    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+                    configuration.setExposedHeaders(List.of("Authorization"));
+                    configuration.setAllowCredentials(true);
+                    return configuration;
+                }))
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new AuthFilter(jwtSecretKey()), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers(HttpMethod.GET, "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/profile/*/amifollowing").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/whatismyname").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/doesuserexist/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/verify/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
@@ -98,4 +115,5 @@ public class AuthSecurityConfiguration{
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

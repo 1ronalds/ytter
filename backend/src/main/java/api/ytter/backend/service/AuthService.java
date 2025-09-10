@@ -13,6 +13,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,8 +45,7 @@ public class AuthService {
             userEntity.setName(registrationData.getName());
             userRepository.save(userEntity);
         }
-
-        if(
+        else if(
             userRepository.findByEmail(registrationData.getEmail()).isEmpty() &&
             userRepository.findByUsername(registrationData.getUsername()).isEmpty()
         ){
@@ -114,5 +114,13 @@ public class AuthService {
         userEntity.setIsVerified(true);
         userRepository.save(userEntity);
         verificationRepository.delete(verificationEntity);
+    }
+
+    public String getNameOfUsername(String username){
+        return userRepository.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException("requested username doesnt exist")).getName();
+    }
+
+    public Boolean getDoesUserExist(String username){
+        return userRepository.findByUsername(username).isPresent();
     }
 }

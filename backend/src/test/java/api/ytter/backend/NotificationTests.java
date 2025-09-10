@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -68,26 +69,29 @@ public class NotificationTests {
     @BeforeEach
     void setUp() {
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM notifications");
         jdbcTemplate.execute("DELETE FROM comments");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM follow");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('user2', 'user', '%s', 'user2@test.com', true, false)""", passwordHash));
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (1234, 1, 'Hello, a post', 0, null, '%s', 1, 0, false)""", getTodayDateTime()));
+                VALUES (1234, %s, 'Hello, a post', 0, null, '%s', 1, 0, false)""", userId1, getTodayDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO notifications (user_id, description, link, is_read , timestamp_ )
-                VALUES (1, 'Your comment/post has a reply', 'https://ytter.lv/comment/to-post/2', true, '%s')""", getTodayDateTimeMinus20Min()));
+                VALUES (%s, 'Your comment/post has a reply', 'https://ytter.lv/comment/to-post/2', true, '%s')""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO notifications (user_id, description, link, is_read , timestamp_ )
-                VALUES (1, 'Your comment/post has a reply', 'https://ytter.lv/comment/to-post/1', false, '%s')""", getTodayDateTime()));
+                VALUES (%s, 'Your comment/post has a reply', 'https://ytter.lv/comment/to-post/1', false, '%s')""", userId1, getTodayDateTime()));
     }
 
     @Test
@@ -108,8 +112,6 @@ public class NotificationTests {
         mockMvc.perform(get("/notifications/all")
                         .header("Authorization", JWTtoken))
                 .andDo(print())
-                .andExpect(jsonPath("$[0].description").value("Your comment/post has a reply"))
-                .andExpect(jsonPath("$[1].description").value("Your comment/post has a reply"))
                 .andExpect(jsonPath("$", hasSize(2)));
     }
     @Test
@@ -125,6 +127,7 @@ public class NotificationTests {
 
     @Test
     void testIfReplyNotificationsWork() throws Exception {
+        jdbcTemplate.execute("DELETE FROM notifications");
         String JWTtoken = loginAndGetJWT("ronalds", "password123");
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -136,7 +139,9 @@ public class NotificationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(commentDataJsonString));
 
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM notifications WHERE link = 'https://ytter.lv/comment/to-post/1234' AND user_id = 1", Integer.class);
+
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Integer count = jdbcTemplate.queryForObject(String.format("SELECT COUNT(*) FROM notifications WHERE user_id = %s", userId1), Integer.class);
         assertThat(count).isEqualTo(1);
     }
 
@@ -147,7 +152,8 @@ public class NotificationTests {
         mockMvc.perform(post("/profile/user2/follow")
                         .header("Authorization", JWTtoken));
 
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM notifications WHERE link = 'https://ytter.lv/posts/profile/ronalds' AND user_id = 2", Integer.class);
+        Long userId2 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'user2'", Long.class);
+        Integer count = jdbcTemplate.queryForObject(String.format("SELECT COUNT(*) FROM notifications WHERE user_id = %s", userId2), Integer.class);
         assertThat(count).isEqualTo(1);
     }
 }

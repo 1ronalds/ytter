@@ -35,9 +35,10 @@ public class ReyeetEndpoints {
     }
 
     @GetMapping("/reyeets/{username}")
-    ResponseEntity<List<ReyeetPostData>> getReyeetsByUser(@PathVariable String username,
+    ResponseEntity<List<ReyeetPostData>> getReyeetsByUser(@RequestAttribute(name = "username", required = false) String requester,
+                                                          @PathVariable String username,
                                                           @RequestParam Integer limit,
                                                           @RequestParam Integer offset){
-        return new ResponseEntity<>(reyeetService.getReyeetsByUser(username, limit, offset), HttpStatus.OK);
+        return new ResponseEntity<>(reyeetService.getReyeetsByUser(requester, username, limit, offset), HttpStatus.OK);
     }
 }

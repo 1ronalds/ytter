@@ -26,6 +26,10 @@ public class FollowService {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
 
+    public Boolean getIsFollowing(String requester, String username){
+        return followRepository.findByFollowerAndFollowing(requester, username).isPresent();
+    }
+
     public void followUser(String follower, String following){
         FollowEntity followEntity = new FollowEntity();
         followEntity.setFollower(userRepository.findByUsername(follower).orElseThrow(RuntimeException::new));
@@ -36,14 +40,14 @@ public class FollowService {
         NotificationEntity notificationEntity= new NotificationEntity();
         notificationEntity.setDescription(follower.concat(" has started following you."));
         notificationEntity.setUser(followingEntity);
-        notificationEntity.setLink("https://ytter.lv/posts/profile/".concat(follower));
+        notificationEntity.setLink("");
         notificationEntity.setRead(false);
         notificationEntity.setTimestamp(new Date());
         notificationRepository.save(notificationEntity);
     }
 
     public void unFollowUser(String follower, String unfollowing){
-        followRepository.delete(followRepository.findByFollowerAndFollowing(follower, unfollowing));
+        followRepository.delete(followRepository.findByFollowerAndFollowing(follower, unfollowing).orElseThrow());
     }
 
     public List<ProfilePublicData> getFollowerList(String username){

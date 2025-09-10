@@ -47,14 +47,16 @@ public class AuthTests {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM verifications");
         jdbcTemplate.execute("DELETE FROM users");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
     }
 
 
     @Test
     void testRegistration() throws Exception {
-        RegistrationData registrationData = new RegistrationData("ronalds", "ronalds", "ronalds@test.com", "parole123");
+        RegistrationData registrationData = new RegistrationData("ronalds", "ronalds", "ronalds@ronalds.com", "parole123");
         ObjectMapper objectMapper = new ObjectMapper();
         String registrationDataAsJsonString = objectMapper.writeValueAsString(registrationData);
 
@@ -81,10 +83,11 @@ public class AuthTests {
     @Test
     void testVerification() throws Exception {
         String verificationKey = "ABC123XYZ";
-        String sql = String.format("""
+        jdbcTemplate.execute("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin) VALUES ('testUser', 'userTest', 'password123', 'testUser@test.com', false, false);
-                INSERT INTO verifications (verification_key, user_id) VALUES ('%s', 1);
-                """, verificationKey);
+                """);
+        Long userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'testUser'", Long.class);
+        String sql = String.format("INSERT INTO verifications (verification_key, user_id) VALUES ('%s', %s);", verificationKey, userId);
         jdbcTemplate.execute(sql);
 
         mockMvc.perform(get("/verify/" + verificationKey))

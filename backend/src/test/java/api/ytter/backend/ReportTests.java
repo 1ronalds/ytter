@@ -65,27 +65,30 @@ public class ReportTests {
     @BeforeEach
     void setUp() {
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM comments");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('adminuser', 'user', '%s', 'user@test.com', true, true)""", passwordHash));
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (2234, 1, 'not already reported post', 0, null, '%s', 0, 0, false)""", getTodayDateTimeMinus20Min()));
+                VALUES (2234, %s, 'not already reported post', 0, null, '%s', 0, 0, false)""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (3234, 1, 'already reported post', 0, null, '%s', 0, 0, true)""", getTodayDateTime()));
+                VALUES (3234, %s, 'already reported post', 0, null, '%s', 0, 0, true)""", userId1, getTodayDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (4321, 1, 2234, null, 'not already reported comment', 1, 0, '%s', false)""", getTodayDateTimeMinus20Min()));
+                VALUES (4321, %s, 2234, null, 'not already reported comment', 1, 0, '%s', false)""", userId1, getTodayDateTimeMinus20Min()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
-                VALUES (5321, 1, 2234, null, 'already reported comment', 0, 0, '%s', true)""", getTodayDateTime()));
+                VALUES (5321, %s, 2234, null, 'already reported comment', 0, 0, '%s', true)""", userId1, getTodayDateTime()));
     }
 
     @Test

@@ -15,27 +15,21 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             SELECT *
             FROM comments
             WHERE root_post = :rootPostId AND reply_to_comment IS NULL
+            ORDER BY timestamp_ DESC
             """, nativeQuery = true)
     List<CommentEntity> findAllAsReplyToPost(@Param("rootPostId") Long postId);
 
+    @Query(value = "SELECT * FROM comments WHERE reply_to_comment = :commentId ORDER BY timestamp_ DESC", nativeQuery = true)
     List<CommentEntity> findAllByReplyToComment_Id(Long commentId);
 
-    @Modifying
-    @Transactional
-    @Query(value = "DELETE FROM comments WHERE root_post = :postId", nativeQuery = true)
-    void deleteAllByRootPostId(Long postId);
-
-    @Query(value = """
-            SELECT *
-            FROM comments
-            WHERE reply_to_comment = :replyToCommentId
-            """, nativeQuery = true)
-    List<CommentEntity> findByReplyToCommentId(Long replyToCommentId);
+    @Query(value = "SELECT * FROM comments WHERE root_post = :root_post ORDER BY timestamp_ DESC", nativeQuery = true)
+    List<CommentEntity> findAllByRootPostId(@Param("root_post") Long root_post);
 
     @Query(value = """
             SELECT *
             FROM comments
             WHERE reported = true
+            ORDER BY timestamp_ DESC
             """, nativeQuery = true)
     List<CommentEntity> findAllByReported();
 }

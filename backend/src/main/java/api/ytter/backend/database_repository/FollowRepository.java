@@ -8,14 +8,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
     @Query(value = """
     SELECT * FROM follow WHERE follower_id = (SELECT id FROM users WHERE username = :followerUsername) 
     AND following_id = (SELECT id FROM users WHERE username = :followingUsername)""", nativeQuery = true)
-    FollowEntity findByFollowerAndFollowing(@Param("followerUsername") String followerUsername,
-                                            @Param("followingUsername") String followingUsername);
+    Optional<FollowEntity> findByFollowerAndFollowing(@Param("followerUsername") String followerUsername,
+                                                      @Param("followingUsername") String followingUsername);
 
 
     @Query(value = "SELECT * FROM follow WHERE follower_id = :followerId", nativeQuery = true)

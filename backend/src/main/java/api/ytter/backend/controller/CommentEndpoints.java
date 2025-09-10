@@ -19,13 +19,13 @@ public class CommentEndpoints {
     private final CommentService commentService;
 
     @GetMapping("/comment/to-post/{postId}")
-    public ResponseEntity<List<CommentData>> getCommentsToPost(@PathVariable Long postId){
-        return new ResponseEntity<List<CommentData>>(commentService.getCommentsToPost(postId), HttpStatus.OK);
+    public ResponseEntity<List<CommentData>> getCommentsToPost(@RequestAttribute(required = false) String username, @PathVariable Long postId){
+        return new ResponseEntity<List<CommentData>>(commentService.getCommentsToPost(username, postId), HttpStatus.OK);
     }
 
     @GetMapping("/comment/to-comment/{commentId}")
-    public ResponseEntity<List<CommentData>> getCommentsToComment(@PathVariable Long commentId){
-        return new ResponseEntity<List<CommentData>>(commentService.getCommentsToComment(commentId), HttpStatus.OK);
+    public ResponseEntity<List<CommentData>> getCommentsToComment(@RequestAttribute(required = false) String username, @PathVariable Long commentId){
+        return new ResponseEntity<List<CommentData>>(commentService.getCommentsToComment(username, commentId), HttpStatus.OK);
     }
 
     @PostMapping("/comment/to-post/create")

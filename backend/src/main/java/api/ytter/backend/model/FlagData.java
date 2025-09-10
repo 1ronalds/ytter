@@ -10,6 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class FlagData {
     private String text;
-    private Long postId;
-    private Long commentId;
+    private String postId;
+    private String commentId;
 }

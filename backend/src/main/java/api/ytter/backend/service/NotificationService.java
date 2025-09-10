@@ -18,19 +18,16 @@ public class NotificationService {
 
     public List<NotificationData> getAllNotifications(String username) {
         UserEntity user = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
-        List<NotificationEntity> unreadNotifications = notificationRepository.findByUserAndNotRead(user.getId());
-        List<NotificationEntity> readNotifications = notificationRepository.findByUserAndRead(user.getId());
-        readNotifications.forEach(notificationEntity -> {
-            notificationEntity.setRead(true);
-            notificationRepository.save(notificationEntity);
-        });
-        List<NotificationEntity> allNotifications = new LinkedList<>();
-        allNotifications.addAll(unreadNotifications);
-        allNotifications.addAll(readNotifications);
+        List<NotificationEntity> notifications = notificationRepository.findAllByUser(user.getId());
+        notifications.stream()
+                .filter(n -> !n.getRead())
+                .forEach(n -> n.setRead(true));
+
+        notificationRepository.saveAll(notifications);
 
         deleteOldNotifications(user);
 
-        return allNotifications.stream().map(notificationEntity -> new NotificationData(
+        return notifications.stream().map(notificationEntity -> new NotificationData(
                         notificationEntity.getDescription(),
                         notificationEntity.getLink(),
                         notificationEntity.getRead(),
@@ -62,13 +59,10 @@ public class NotificationService {
     public Integer getUnreadNotificationCount(String username) {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(RuntimeException::new);
-        return Math.toIntExact(notificationRepository.findByUser(user)
-                .stream()
-                .filter(NotificationEntity::getRead)
-                .count());
+        return Math.toIntExact(notificationRepository.getUnreadCount(user.getId()));
     }
 
     private void deleteOldNotifications(UserEntity userEntity) {
-        notificationRepository.findByUser(userEntity).stream().skip(50).forEach(notificationRepository::delete);
+        notificationRepository.findAllByUser(userEntity.getId()).stream().skip(50).forEach(notificationRepository::delete);
     }
 }

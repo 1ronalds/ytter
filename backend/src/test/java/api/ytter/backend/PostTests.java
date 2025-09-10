@@ -84,38 +84,42 @@ public class PostTests {
     @BeforeEach
     void setUp() throws IOException {
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM posts");
         jdbcTemplate.execute("DELETE FROM users");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('user2', 'user', '%s', 'user@test.com', true, false)""", passwordHash));
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Long userId2 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'user2'", Long.class);
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (1234, 1, 'Hello, my 5th post', 0, null, '%s', 1, 0, false)""", getTodayDateTime()));
+                VALUES (1234, %s, 'Hello, my 5th post', 0, null, '%s', 1, 0, false)""", userId1, getTodayDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (2234, 1, 'Hello, my 4th post', 0, null, '%s', 2, 0, false)""", getSixDaysAgoDateTime()));
+                VALUES (2234, %s, 'Hello, my 4th post', 0, null, '%s', 2, 0, false)""", userId1, getSixDaysAgoDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (3234, 1, 'Hello, my 3rd post', 0, null, '%s', 3, 0, false)""", getEightDaysAgoDateTime()));
+                VALUES (3234, %s, 'Hello, my 3rd post', 0, null, '%s', 3, 0, false)""", userId1, getEightDaysAgoDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (4234, 1, 'Hello, my 2nd post', 0, null, '%s', 4, 0, false)""", getTwentyDaysAgoDateTime()));
+                VALUES (4234, %s, 'Hello, my 2nd post', 0, null, '%s', 4, 0, false)""", userId1, getTwentyDaysAgoDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (5234, 1, 'Hello, my 1st post', 0, null, '%s', 5, 0, false)""", getFortyDaysAgoDateTime()));
+                VALUES (5234, %s, 'Hello, my 1st post', 0, null, '%s', 5, 0, false)""", userId1, getFortyDaysAgoDateTime()));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (6234, 2, 'Hello, post by different user', 0, null, '%s', 0, 0, false)""", getTodayTimeMinusTwentyMin()));
+                VALUES (6234, %s, 'Hello, post by different user', 0, null, '%s', 0, 0, false)""", userId2, getTodayTimeMinusTwentyMin()));
         jdbcTemplate.execute(String.format("""
-                INSERT INTO POSTS (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
-                VALUES (7234, 2, 'Hello, post by different user with image', 0, null, '%s', 0, 0, false)""", getTodayTimeMinusFortyMin()));
-        jdbcTemplate.execute("""
+                INSERT INTO posts (id, author, text, reply_count, image_id, timestamp_, like_count, reyeet_count, reported)
+                VALUES (7234, %s, 'Hello, post by different user with image', 0, null, '%s', 0, 0, false)""", userId2, getTodayTimeMinusFortyMin()));
+        jdbcTemplate.execute(String.format("""
                 INSERT INTO follow (follower_id, following_id)
-                VALUES (1, 2)""");
+                VALUES (%s, %s)""", userId1, userId2));
         if (!Files.exists(Paths.get("./testuploads"))) {
             Files.createDirectories(Paths.get("./testuploads"));
         }

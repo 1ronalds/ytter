@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 public class MailService {
     private final JavaMailSender mailSender;
 
-    public void sendVerificationCode(String to, String verificationLink) {
+    public void sendVerificationCode(String to, String verificationCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("verification for ytter.lv");
-        String text = "Hello! To verify your account on ytter.lv you have to follow this link: " + verificationLink;
+        String text = "Hello! To verify your account on ytter.lv you have to follow this link: https://ytter.lv/verify/" + verificationCode;
         message.setText(text);
         mailSender.send(message);
     }

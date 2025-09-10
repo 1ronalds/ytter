@@ -13,8 +13,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class ReyeetPostData {
 
-    private Long postId;
-    private ProfilePublicData profileDataPublic;
+    private String postId;
+    private ProfilePublicData profilePublicData;
     private Long imageId;
     private Long replyCount;
     private Long likeCount;

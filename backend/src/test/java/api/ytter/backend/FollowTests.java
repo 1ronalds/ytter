@@ -46,15 +46,19 @@ public class FollowTests {
     @BeforeEach
     void setUp(){
         String passwordHash = passwordEncoder.encode("password123");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM follow");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('ronalds', 'ronalds', '%s', 'ronalds@test.com', true, false)""", passwordHash));
         jdbcTemplate.execute(String.format("""
                 INSERT INTO users (username, name, hashed_password, email, is_verified, is_admin)
                 VALUES ('user2', 'user', '%s', 'user@test.com', true, false)""", passwordHash));
-        jdbcTemplate.execute("INSERT INTO follow (follower_id, following_id) VALUES (1, 2)");
+        Long userId1 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'ronalds'", Long.class);
+        Long userId2 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'user2'", Long.class);
+        jdbcTemplate.execute(String.format("INSERT INTO follow (follower_id, following_id) VALUES (%s, %s)", userId1, userId2));
     }
 
     @Test
@@ -65,8 +69,8 @@ public class FollowTests {
                 .header("Authorization", JWTtoken))
                 .andDo(print())
                 .andExpect(status().isOk());
-
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM follow WHERE follower_id = 2", Integer.class);
+        Long userId2 = jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = 'user2'", Long.class);
+        Integer count = jdbcTemplate.queryForObject(String.format("SELECT COUNT(*) FROM follow WHERE follower_id = %s", userId2), Integer.class);
         assertThat(count).isEqualTo(1);
     }
 

@@ -20,7 +20,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             SELECT * 
             FROM posts
             WHERE timestamp_ BETWEEN :startDate AND :endDate 
-            ORDER BY like_count DESC
+            ORDER BY like_count DESC, timestamp_ DESC
             """,
             nativeQuery = true)
     List<PostEntity> findAllByDateRangeSortedByLikes(@Param("startDate") LocalDateTime startDate,
