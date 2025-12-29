@@ -83,8 +83,8 @@ public class LikeTests {
         jdbcTemplate.execute(String.format("""
                 INSERT INTO comments (id, author, root_post, reply_to_comment, comment, reply_count, like_count, timestamp_, reported)
                 VALUES (6321, %s, 1234, null, 'not already liked comment', 0, 0, '%s', false)""", userId1, getTodayDateTime()));
-        jdbcTemplate.execute("INSERT INTO likes (post_id, comment_id, user_id) VALUES (null, 5321, 1)");
-        jdbcTemplate.execute("INSERT INTO likes (post_id, comment_id, user_id) VALUES (2234, null, 1)");
+        jdbcTemplate.execute(String.format("INSERT INTO likes (post_id, comment_id, user_id) VALUES (null, 5321, %s)", userId1));
+        jdbcTemplate.execute(String.format("INSERT INTO likes (post_id, comment_id, user_id) VALUES (2234, null, %s)", userId1));
     }
 
     @Test

@@ -33,7 +33,9 @@ public class AuthService {
     private final MailService mailService;
 
     public void registerUser(RegistrationData registrationData){
+        // funkcija apraksta lietotāja reģistrēšanos
         if(registrationData.getEmail().endsWith("@test.com") &&
+                // apraksta reģistrāciju bez verifikācijas ar @test.com domēnu
                 userRepository.findByEmail(registrationData.getEmail()).isEmpty() &&
                 userRepository.findByUsername(registrationData.getUsername()).isEmpty()){
             UserEntity userEntity = new UserEntity();
@@ -49,6 +51,7 @@ public class AuthService {
             userRepository.findByEmail(registrationData.getEmail()).isEmpty() &&
             userRepository.findByUsername(registrationData.getUsername()).isEmpty()
         ){
+            // gadījums kad epasta adrese nav testa epasta adrese un ir jāveic validācija
             UserEntity userEntity = new UserEntity();
             userEntity.setEmail(registrationData.getEmail());
             userEntity.setUsername(registrationData.getUsername());
@@ -70,23 +73,27 @@ public class AuthService {
     }
 
     public String checkLoginAndGenerateToken(LoginData loginData){
+        // funkcija kas autentifikācijai ģenerē jwt tokenu un pārbauda vai lietotājvārds un parole ir patiesi
         String JWT = "";
         if(loginData.getUsername() != null || loginData.getEmail() != null){
+            // autentifikācija ir iespējama gadījumā kad vai nu lietotājvārds vai epasts ir padots.
             UserEntity userEntity;
 
             if(loginData.getUsername() != null){
+                // gadījums ja ir padots lietotājvārds
                 userEntity = userRepository.findByUsername(loginData.getUsername()).orElseThrow(()-> new LoginException("Invalid username/password"));
                 if(!userEntity.getIsVerified()){
                     throw new LoginException("User not verified");
                 }
             } else {
+                // gadījums ja ir padots epasts
                 userEntity = userRepository.findByEmail(loginData.getEmail()).orElseThrow(()-> new LoginException("Invalid username/password"));
                 if(!userEntity.getIsVerified()){
                     throw new LoginException("User not verified");
                 }
             }
-            if(passwordEncoder.matches(loginData.getPassword(), userEntity.getHashedPassword())){
-                JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin());
+            if(passwordEncoder.matches(loginData.getPassword(), userEntity.getHashedPassword())){ // pārbauda vai parole ir pareiza
+                JWT = generateJWT(userEntity.getUsername(), userEntity.getIsAdmin()); // izveido JWT
             } else {
                 throw new LoginException("Invalid username/password");
             }
@@ -97,17 +104,19 @@ public class AuthService {
     }
 
     private String generateJWT(String username, Boolean isAdmin){
+        // funkcija ģenerē JWT
         Date currentDate = new Date();
         System.out.println("Date: " + Date.from(LocalDateTime.now().plusDays(1).atZone(ZoneId.systemDefault()).toInstant()));
         return String.valueOf(Jwts.builder()
-                .subject(username)
-                .claim("admin", isAdmin ? "yes" : "no")
-                .expiration(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).plusDays(1).toInstant()))
+                .subject(username) // pievieno lietotājvārdu
+                .claim("admin", isAdmin ? "yes" : "no") // pievieno admin statusu
+                .expiration(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).plusDays(1).toInstant())) // pievieno 1d derīguma termiņu
                 .signWith(jwtSecret)
                 .compact());
     }
 
     public void verifyEmail(String verificationKey){
+        // verificē lietotāju atrodot verifikācijas kodam atbilstošo lietotāju un nomainot tam statusu uz verificēts un izdzēš verifikācijas entītiju
         VerificationEntity verificationEntity = verificationRepository.findByVerificationKey(verificationKey)
                 .orElseThrow(()->new VerificationException("Invalid verification key"));
         UserEntity userEntity = userRepository.getReferenceById(verificationEntity.getUser().getId());
@@ -117,10 +126,12 @@ public class AuthService {
     }
 
     public String getNameOfUsername(String username){
+        // iegūst vārdu zinot lietotājvārdu
         return userRepository.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException("requested username doesnt exist")).getName();
     }
 
     public Boolean getDoesUserExist(String username){
+        // noskaidro vai lietotājvārdam ir reģistrēts konts
         return userRepository.findByUsername(username).isPresent();
     }
 }

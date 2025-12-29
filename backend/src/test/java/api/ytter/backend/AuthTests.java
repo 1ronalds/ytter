@@ -47,6 +47,7 @@ public class AuthTests {
 
     @BeforeEach
     void setUp() {
+        // izdzēš iepriekšējā testā veidotos datus
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         jdbcTemplate.execute("DELETE FROM verifications");
         jdbcTemplate.execute("DELETE FROM users");
@@ -60,7 +61,7 @@ public class AuthTests {
         ObjectMapper objectMapper = new ObjectMapper();
         String registrationDataAsJsonString = objectMapper.writeValueAsString(registrationData);
 
-        Mockito.doNothing().when(mailService).sendVerificationCode(any(), any());
+        Mockito.doNothing().when(mailService).sendVerificationCode(any(), any()); // mocko epasta serveri un neveic nekādas darbības to izsaucot
 
         mockMvc.perform(post("/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -69,7 +70,7 @@ public class AuthTests {
                 .andExpect(status().isOk())
         ;
 
-        Mockito.verify(mailService, Mockito.times(1)).sendVerificationCode(any(), any());
+        Mockito.verify(mailService, Mockito.times(1)).sendVerificationCode(any(), any()); // pārbauda vai epasta sūtīšanas funkcija tika izsaukta
 
         String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, "ronalds");

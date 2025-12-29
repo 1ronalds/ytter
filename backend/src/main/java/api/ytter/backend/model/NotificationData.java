@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import java.util.Date;
 
+// klase apraksta JSON datu struktūru, kas tiek atgriezta klientam un objektu ar ko darbojas kods
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

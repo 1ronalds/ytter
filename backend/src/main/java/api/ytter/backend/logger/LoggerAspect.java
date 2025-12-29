@@ -14,7 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 public class LoggerAspect {
     private static final Logger logger = LoggerFactory.getLogger(LoggerAspect.class);
-
+    // funkcija pievieno logošanas datu ievadi katram REST API izsaukumam (controller klasē)
     @Before("execution(public * api.ytter.backend.controller..*(..))")
     public void logBeforeControllerMethod(JoinPoint joinPoint) {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

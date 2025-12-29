@@ -36,7 +36,7 @@ public class PostService {
     private final LikeRepository likeRepository;
     private final ReyeetRepository reyeetRepository;
     private final CommentRepository commentRepository;
-    static {
+    static { // faila sākums atkarībā no faila tipa
         magicNumbers.put("FFD8FF", "jpg");
         magicNumbers.put("89504E47", "png");
         magicNumbers.put("424D", "bmp");
@@ -50,7 +50,8 @@ public class PostService {
     @Value("${ytter.uploads}")
     private String UPLOAD_DIR;
 
-    public List<PostData> getFollowingFeed(String username, Integer limit, Integer offset){
+    public List<PostData> getFollowingFeed(String username, Integer limit, Integer offset){ // limit un offset nosaka ka visas publikācijas netiek atgrieztas uzreiz, bet pa daļām
+        // iegūst publikāciju sarakstu no lietotājiem, kam tiek sekots
         Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
         List<PostEntity> posts = postRepository.
                 findAllPostsByUsersFollowing(userRepository.findByUsername(username).orElseThrow(RuntimeException::new).getId(), pageable);
@@ -70,6 +71,7 @@ public class PostService {
     }
 
     public List<PostData> getPostsByUsername(String requester, String username, Integer limit, Integer offset ){
+        // iegūst publikācijas no lietotājvārda
         Pageable pageable = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "timestamp_"));
         return postRepository.findByUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new), pageable)
                 .stream()
@@ -91,6 +93,7 @@ public class PostService {
 
 
     public List<PostData> getTopPostsPast7Days(String requester, Integer limit, Integer offset){
+        // iegūst pēdējās 7 dienās populārākās publikācijas
         Pageable pageable = PageRequest.of(offset, limit);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = now.minusDays(7);
@@ -98,10 +101,6 @@ public class PostService {
         return postRepository.findAllByDateRangeSortedByLikes(startDate, now, pageable)
                 .stream()
                 .map(postEntity -> {
-                    if(requester!=null) {
-                        System.out.println("DBG");
-                        System.out.println(likeRepository.findByUserAndPost(userRepository.findByUsername(requester).orElseThrow(), postEntity).isPresent());
-                    }
                     return new PostData(
                         postEntity.getId(),
                         new ProfilePublicData(postEntity.getUser().getUsername(), postEntity.getUser().getName()),
@@ -118,6 +117,7 @@ public class PostService {
     }
 
     public List<PostData> getTopPostsPast30Days(String requester, Integer limit, Integer offset){
+        // iegūst populārākās publikācijas pēdējās 30 dienās
         Pageable pageable = PageRequest.of(offset, limit);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = now.minusDays(30);
@@ -140,6 +140,7 @@ public class PostService {
     }
 
     public List<PostData> getNewPosts(String requester, Integer limit, Integer offset){
+        // iegūst jaunās publikācijas
         Pageable pageable = PageRequest.of(offset, limit);
         return postRepository.findAllByOrderByTimestamp_Desc(pageable)
                 .stream()
@@ -159,6 +160,7 @@ public class PostService {
     }
 
     public PostData getPostById(String requester, Long PostId){
+        // iegūst publikāciju pēc id
         PostData postData = new PostData();
         PostEntity postEntity = postRepository.findById(PostId).orElseThrow(RuntimeException::new);
         postData.setPostId(postEntity.getId());
@@ -174,6 +176,7 @@ public class PostService {
     }
 
     private String getFileExtension(byte[] byteStream) {
+        // nosaka faila tipu atkarībā no pirmajiem characteriem failā
         StringBuilder hexString = new StringBuilder();
         for (byte b : byteStream) {
             String hex = Integer.toHexString(0xFF & b).toUpperCase();
@@ -193,6 +196,7 @@ public class PostService {
 
 
     public FileObject getImage(Long imageId){
+        // iegūst bildi (priekš publikācijas)
         FileObject fileObject = new FileObject();
         Path path = Paths.get(UPLOAD_DIR, String.valueOf(imageId));
         if(Files.exists(path)){
@@ -213,6 +217,7 @@ public class PostService {
     }
 
     public PostData uploadPost(MultipartFile image, PostData post, String username) {
+        // augšupielādē publikāciju
         Long imageId = null;
         if(image != null){
             try {
@@ -221,7 +226,7 @@ public class PostService {
                     Files.createDirectories(uploadPath);
                 }
 
-                if (!ALLOWED_MIME_TYPES.contains(tika.detect(image.getInputStream()))){
+                if (!ALLOWED_MIME_TYPES.contains(tika.detect(image.getInputStream()))){ // noskaidro vai faila formāts ir atbalstīts
                     throw new InvalidDataException("Not supported file format");
                 }
 
@@ -259,6 +264,7 @@ public class PostService {
     }
 
     public void deletePost(String username, Long postId){
+        // dzēš publikāciju
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         if(postRepository.findById(postId).get().getUser().equals(userEntity) || userEntity.getIsAdmin()){
             likeRepository.deleteByPostId(postId);
@@ -272,6 +278,7 @@ public class PostService {
     }
     @Transactional
     public void deletePostAndChildren(Long postId) {
+        // izdzēš publikāciju un tās apakškomentārus
         PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         for (CommentEntity child : commentRepository.findAllAsReplyToPost(postId)) {
@@ -282,6 +289,7 @@ public class PostService {
 
     @Transactional
     public void deleteCommentAndChildren(Long commentId){
+        // izdzēš komentārus un to apakškomentārus izmantojot rekursiju
         CommentEntity comment = commentRepository.findById(commentId).orElseThrow();
         for(CommentEntity child: commentRepository.findAllByReplyToComment_Id(commentId)){
             deleteCommentAndChildren(child.getId());

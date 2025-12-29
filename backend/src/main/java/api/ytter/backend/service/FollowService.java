@@ -27,16 +27,19 @@ public class FollowService {
     private final NotificationRepository notificationRepository;
 
     public Boolean getIsFollowing(String requester, String username){
+        // noskaidro vai dotajam lietotājs seko kādam no lietotājiem
         return followRepository.findByFollowerAndFollowing(requester, username).isPresent();
     }
 
     public void followUser(String follower, String following){
+        // izveido jaunu sekošanu
         FollowEntity followEntity = new FollowEntity();
         followEntity.setFollower(userRepository.findByUsername(follower).orElseThrow(RuntimeException::new));
         UserEntity followingEntity = userRepository.findByUsername(following).orElseThrow(()-> new InvalidDataException("User doesnt exist"));
         followEntity.setFollowing(followingEntity);
         followRepository.save(followEntity);
 
+        // izveido jaunu paziņojumu lietotājam, kas saņem sekošanu
         NotificationEntity notificationEntity= new NotificationEntity();
         notificationEntity.setDescription(follower.concat(" has started following you."));
         notificationEntity.setUser(followingEntity);
@@ -47,10 +50,12 @@ public class FollowService {
     }
 
     public void unFollowUser(String follower, String unfollowing){
+        // pārstāj sekot lietotājam, izdzēšot sekošanas entītiju
         followRepository.delete(followRepository.findByFollowerAndFollowing(follower, unfollowing).orElseThrow());
     }
 
     public List<ProfilePublicData> getFollowerList(String username){
+        // iegūst sarakstu ar sekotājiem dotajam lietotājam
         return followRepository.findFollowersToUsername(userRepository.findByUsername(username)
                 .orElseThrow(()->new InvalidDataException("Username doesnt exist")).getId()).stream()
                 .map((followEntity -> new ProfilePublicData(
@@ -60,6 +65,7 @@ public class FollowService {
     }
 
     public List<ProfilePublicData> getFollowingList(String username){
+        // iegūst sarakstu ar to, kam seko dotais lietotājs
         return followRepository.findFollowingFromUsername(userRepository.findByUsername(username)
                 .orElseThrow(()->new InvalidDataException("Username doesnt exist"))
                 .getId()).stream().map((followEntity -> new ProfilePublicData(

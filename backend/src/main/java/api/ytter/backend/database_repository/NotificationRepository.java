@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+// klase apraksta funkcijas, kas komunicē ar datubāzi. Šīs ir manuāli veidotās funkcijas un satur SQL vaicājumus.
+
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
 
     @Query(value = "SELECT COUNT(*) FROM notifications WHERE user_id = :userId AND is_read = false ORDER BY timestamp_ DESC ", nativeQuery = true)

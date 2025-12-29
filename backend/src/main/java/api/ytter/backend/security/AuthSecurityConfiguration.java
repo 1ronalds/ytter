@@ -46,10 +46,9 @@ public class AuthSecurityConfiguration{
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(request -> {
+    /*
+    testēšanai
+                    .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
                     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
@@ -58,12 +57,16 @@ public class AuthSecurityConfiguration{
                     configuration.setAllowCredentials(true);
                     return configuration;
                 }))
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new AuthFilter(jwtSecretKey()), UsernamePasswordAuthenticationFilter.class)
+     */
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new AuthFilter(jwtSecretKey()), UsernamePasswordAuthenticationFilter.class) // pievieno jwt filtru
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers(HttpMethod.GET, "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/profile/*/amifollowing").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/error").permitAll() // satur .permitAll() - piekļūt bez autentifikācijas
+                        .requestMatchers(HttpMethod.GET, "/profile/*/amifollowing").authenticated() // vai .authenticated() - tikai ar autentifikāciju
                         .requestMatchers(HttpMethod.GET, "/whatismyname").authenticated()
                         .requestMatchers(HttpMethod.GET, "/doesuserexist/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/register").permitAll()

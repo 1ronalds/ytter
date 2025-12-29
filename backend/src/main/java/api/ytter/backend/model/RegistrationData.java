@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
+// klase apraksta JSON datu struktūru, kas tiek atgriezta klientam un objektu ar ko darbojas kods
+
 @AllArgsConstructor
 @Getter
 public class RegistrationData {

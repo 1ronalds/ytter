@@ -6,12 +6,8 @@ import api.ytter.backend.database_model.PostEntity;
 import api.ytter.backend.database_repository.*;
 import api.ytter.backend.exception.exception_types.InvalidDataException;
 import api.ytter.backend.model.CommentData;
-import api.ytter.backend.model.PostData;
 import api.ytter.backend.model.ProfilePublicData;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +24,7 @@ public class CommentService {
 
 
     private CommentData getCommentById(Long commentId){
+        // iegūst komentāru zinot tā ID
         return commentRepository.findById(commentId).map(commentEntity -> new CommentData(commentEntity.getId(),
                 new ProfilePublicData(commentEntity.getUser().getUsername(), commentEntity.getUser().getName()),
                 commentEntity.getRootPost().getId(),
@@ -37,6 +34,7 @@ public class CommentService {
     }
 
     public List<CommentData> getCommentsToPost(String username, Long postId){
+        // iegūst komentārus kas atbild uz publikāciju
         return commentRepository.findAllAsReplyToPost(postId)
                 .stream()
                 .map(commentEntity -> new CommentData(
@@ -55,6 +53,7 @@ public class CommentService {
 
 
     public List<CommentData> getCommentsToComment(String username, Long commentId){
+        // iegūst komentārus, kas atbild uz komentāru
         return commentRepository.findAllByReplyToComment_Id(commentId)
                 .stream()
                 .map(commentEntity -> new CommentData(
@@ -72,6 +71,7 @@ public class CommentService {
 
 
     public CommentData createComment(CommentData commentData, String username) {
+        // izveido komentāru, aizpilda visus nelietotāja definētos laukus ar sākotnējām vērtībām
         Long postId;
         Random random = new Random();
         do {
@@ -84,11 +84,11 @@ public class CommentService {
         if(commentData.getReplyToCommentId() != null){
             replyTo = commentRepository.findById(commentData.getReplyToCommentId()).orElseThrow(RuntimeException::new);
             commentEntity.setReplyToComment(replyTo);
-            replyTo.increaseReplyCount();
+            replyTo.increaseReplyCount(); // palielina atbilžu skaitu komentāram uz kuru atbild
         } else {
             rootPost = postRepository.findById(commentData.getRootPostId()).orElseThrow(RuntimeException::new);
             commentEntity.setReplyToComment(null);
-            rootPost.increaseReplyCount();
+            rootPost.increaseReplyCount(); // palielina atbilžu skaitu publikācijai uz kuru atbild
         }
         commentEntity.setUser(userRepository.findByUsername(username).orElseThrow(RuntimeException::new));
         commentEntity.setComment(commentData.getComment());
@@ -103,6 +103,8 @@ public class CommentService {
         };
         commentRepository.save(commentEntity);
         commentData.setCommentId(postId);
+
+        // izveido paziņojumu lietotājam, uz kura publikāciju veikta atbilde
 
         NotificationEntity notificationEntity = new NotificationEntity();
         String replyToText = "";
@@ -126,8 +128,10 @@ public class CommentService {
     }
 
     public void deleteComment(String username, Long commentId) {
+        // izdzēš komentāru
         CommentEntity deletableComment = commentRepository.findById(commentId).orElseThrow(() -> new InvalidDataException("Deletable comment doesnt exist"));
-        if (deletableComment.getUser().getUsername().equals(username) || userRepository.findByUsername(username).get().getIsAdmin()) {
+        if (deletableComment.getUser().getUsername().equals(username) || userRepository.findByUsername(username).get().getIsAdmin()) { // noskaidro vai dzēsējs dzēš savu publikāciju vai arī ir administrators (citu publikāciju dzēšanai)
+
             if(deletableComment.getReplyToComment() == null){
                 PostEntity postEntity = deletableComment.getRootPost();
                 postEntity.decreaseReplyCount();
@@ -137,7 +141,7 @@ public class CommentService {
                 commentEntity.decreaseReplyCount();
                 commentRepository.save(commentEntity);
             }
-            deleteCommentAndChildren(commentId);
+            deleteCommentAndChildren(commentId); // izdzēš atbildes komentārus
         } else {
             throw new InvalidDataException("Not your comment and not admin");
         }
@@ -145,6 +149,7 @@ public class CommentService {
 
     @Transactional
     public void deleteCommentAndChildren(Long commentId){
+        // funkcija iet cauri visiem apakškomentāriem un izsauc sevi atkal (rekursija) lai izdzēstu visus apakškomentārus dzēšot augstāku komentāru
         CommentEntity comment = commentRepository.findById(commentId).orElseThrow();
         for(CommentEntity child: commentRepository.findAllByReplyToComment_Id(commentId)){
             deleteCommentAndChildren(child.getId());

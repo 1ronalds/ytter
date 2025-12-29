@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import java.util.Date;
 
+// Klase apraksta objektu, kas tiek izmantots komunikācijā ar datubāzi. Apraksta datubāzes tabulu.
+
 @Entity
 @Table(name = "comments")
 @Getter

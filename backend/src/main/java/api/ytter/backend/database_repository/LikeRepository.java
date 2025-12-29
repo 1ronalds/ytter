@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+// klase apraksta funkcijas, kas komunicē ar datubāzi. Šīs ir manuāli veidotās funkcijas un satur SQL vaicājumus.
+
 @Repository
 public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
     @Query("SELECT l FROM LikeEntity l WHERE l.user = :user AND l.post = :post")

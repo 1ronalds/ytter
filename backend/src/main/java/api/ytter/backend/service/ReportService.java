@@ -22,6 +22,7 @@ public class ReportService {
     private final CommentRepository commentRepository;
 
     public void reportPost(String username, Long postId) {
+        // izveido ziņojumu par publikāciju, atzīmējot publikāciju kā ziņotu datubāzē
         if (userRepository.findByUsername(username).isPresent()) {
             PostEntity postEntity = postRepository.findById(postId).orElseThrow(() -> new InvalidDataException("Post doesnt exist"));
             postEntity.setReported(true);
@@ -30,6 +31,7 @@ public class ReportService {
     }
 
     public void reportComment(String username, Long commentId) {
+        // izveido ziņojumu par komentāru, atzīmējot komentāru kā ziņotu datubāzē
         if (userRepository.findByUsername(username).isPresent()) {
             CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(() -> new InvalidDataException("Comment doesnt exist"));
             commentEntity.setReported(true);
@@ -38,7 +40,8 @@ public class ReportService {
     }
 
     public List<FlagData> getReports(String username) {
-        if (userRepository.findByUsername(username).get().getIsAdmin()) {
+        // iegūst ziņojumu sarakstu
+        if (userRepository.findByUsername(username).get().getIsAdmin()) { // pārbauda vai pieprasītājs ir admins
             List<PostEntity> reportedPosts = postRepository.findAllByReported();
             List<CommentEntity> reportedComments = commentRepository.findAllByReported();
             List<Object> reported = new ArrayList<>();
@@ -47,20 +50,21 @@ public class ReportService {
             reported.sort((o1, o2) -> {
                 Date timestamp1 = (o1 instanceof PostEntity) ? ((PostEntity) o1).getTimestamp() : ((CommentEntity) o1).getTimestamp();
                 Date timestamp2 = (o2 instanceof PostEntity) ? ((PostEntity) o2).getTimestamp() : ((CommentEntity) o2).getTimestamp();
-                return timestamp2.compareTo(timestamp1);
+                return timestamp2.compareTo(timestamp1); // apvieno sakārtoti publikācijas un komentārus par ko saņemti ziņojumi
             });
             return reported.stream().map(o -> {
                 String message = (o instanceof PostEntity) ? ((PostEntity) o).getText() : ((CommentEntity) o).getComment();
                 Long postId = (o instanceof PostEntity) ? ((PostEntity) o).getId() : null;
                 Long commentId = (o instanceof CommentEntity) ? ((CommentEntity) o).getId() : null;
                 return new FlagData(message, postId != null ? postId.toString() : "", commentId != null ? commentId.toString() : "");
-            }).toList();
+            }).toList(); // izveido ziņojumu objektus
         } else {
             throw new InvalidDataException("Not admin");
         }
     }
 
     public void ignoreReportPost(String username, Long postId) {
+        // ignorē ziņojumu par publikāciju
         if (userRepository.findByUsername(username).get().getIsAdmin()) {
             PostEntity postEntity = postRepository.findById(postId).orElseThrow(()->new InvalidDataException("Post doesnt exist"));
             postEntity.setReported(false);
@@ -70,6 +74,7 @@ public class ReportService {
     }
 
     public void ignoreReportComment(String username, Long commentId) {
+        // ignorē ziņojumu par komentāru
         if (userRepository.findByUsername(username).get().getIsAdmin()) {
             CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(()->new InvalidDataException("Comment doesnt exist"));
             commentEntity.setReported(false);

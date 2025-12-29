@@ -21,11 +21,12 @@ public class LikeService {
     private final UserRepository userRepository;
 
     public void likePostAdd(String username, Long postId){
+        // pievien patīk publikācijai - palielina patīk skaitu un pievieno patikšanas entītiju
         PostEntity postEntity = postRepository.findById(postId).orElseThrow(()-> new InvalidDataException("Post doesnt exist"));
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
 
         if(likeRepository.findByUserAndPost(userEntity, postEntity).isPresent()){
-            throw new RuntimeException();
+            throw new RuntimeException(); // ja publikācija jau ir atzīmēta ar patīk izmet kļūdu un nepalielina patīk skaitu
         }
         postEntity.increaseLikeCount();
         postRepository.save(postEntity);
@@ -34,6 +35,7 @@ public class LikeService {
     }
 
     public void likePostRemove(String username, Long postId) {
+        // noņem patīk no publikācijas, izdzēšot patīk entītiju un samazinot patīk skaitu
         PostEntity postEntity = postRepository.findById(postId).orElseThrow(()-> new InvalidDataException("Post doesnt exist"));
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         LikeEntity likeEntity = likeRepository.findByUserAndPost(userEntity, postEntity).orElseThrow(()-> new InvalidDataException("Post isnt liked"));
@@ -43,11 +45,12 @@ public class LikeService {
     }
 
     public void likeCommentAdd(String username, Long commentId){
+        // pievieno patīk komentāram, izveidojot jaunu patīk entītiju un palielinot patīk skaitu
         CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(()-> new InvalidDataException("Comment doesnt exist"));
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
 
         if(likeRepository.findByUserAndComment(userEntity, commentEntity).isPresent()){
-            throw new InvalidDataException("Comment is already liked");
+            throw new InvalidDataException("Comment is already liked"); // ja jau atzīmēts ar patīk met kļūdu un nepalielina patīk skaitu
         }
         commentEntity.increaseLikeCount();
         commentRepository.save(commentEntity);
@@ -56,6 +59,7 @@ public class LikeService {
     }
 
     public void likeCommentRemove(String username, Long commentId){
+        // noņem patīk no komentāra dzēšot patīk entītiju un samazinot patīk skaitu
         CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(()-> new InvalidDataException("Comment doesnt exist"));
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         LikeEntity likeEntity = likeRepository.findByUserAndComment(userEntity, commentEntity).orElseThrow(()-> new InvalidDataException("Comment isnt liked"));

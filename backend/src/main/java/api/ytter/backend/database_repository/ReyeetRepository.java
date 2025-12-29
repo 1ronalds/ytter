@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+// klase apraksta funkcijas, kas komunicē ar datubāzi. Šīs ir manuāli veidotās funkcijas un satur SQL vaicājumus.
+
 @Repository
 public interface ReyeetRepository extends JpaRepository<ReyeetEntity, Long> {
 

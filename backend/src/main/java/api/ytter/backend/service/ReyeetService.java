@@ -27,6 +27,7 @@ public class ReyeetService {
     private final LikeRepository likeRepository;
 
     public void addReyeet(String username, Long postId) {
+        // pievieno rejītu, izveidojot rejīta entītiju un palielinot rejītu skaitu publikācijas datos
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         PostEntity postEntity = postRepository.findById(postId).orElseThrow(() -> new InvalidDataException("Post doesnt exist"));
 
@@ -43,6 +44,7 @@ public class ReyeetService {
     }
 
     public void deleteReyeet(String username, Long postId) {
+        // dzēš rejītu
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         PostEntity postEntity = postRepository.findById(postId).orElseThrow(() -> new InvalidDataException("Post doesnt exist"));
         ReyeetEntity reyeetEntity = reyeetRepository.findByUserAndPost(userEntity, postEntity).orElseThrow(RuntimeException::new);
@@ -52,6 +54,7 @@ public class ReyeetService {
     }
 
     public List<ReyeetPostData> getFollowingReyeetFeed(String username, Integer limit, Integer offset) {
+        // iegūst sarakstu ar rejītiem no lietotājiem, kam tiek sekots
         Pageable pageable = PageRequest.of(offset, limit);
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUserFollowing(userEntity.getId(), pageable);
@@ -71,6 +74,7 @@ public class ReyeetService {
     }
 
     public List<ReyeetPostData> getReyeetsByUser(String requester, String username, Integer limit, Integer offset) {
+        // iegūst rejītu sarakstu, ko veicis kāds lietotājs
         Pageable pageable = PageRequest.of(offset, limit);
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
         List<ReyeetEntity> reyeetEntityList = reyeetRepository.findReyeetsByUser(userEntity, pageable);
