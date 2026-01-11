@@ -61,7 +61,7 @@ public class ReyeetService {
         return reyeetEntityList.stream().map(reyeetEntity -> new ReyeetPostData(
                 reyeetEntity.getPost().getId().toString(),
                 new ProfilePublicData(reyeetEntity.getPost().getUser().getUsername(), reyeetEntity.getPost().getUser().getName()),
-                reyeetEntity.getPost().getImageId(),
+                reyeetEntity.getPost().getImageId() != null ? reyeetEntity.getPost().getImageId().toString() : null,
                 reyeetEntity.getPost().getReplyCount(),
                 reyeetEntity.getPost().getLikeCount(),
                 reyeetEntity.getPost().getReyeetCount(),
@@ -81,7 +81,7 @@ public class ReyeetService {
         return reyeetEntityList.stream().map(reyeetEntity -> new ReyeetPostData(
                 reyeetEntity.getPost().getId().toString(),
                 new ProfilePublicData(reyeetEntity.getPost().getUser().getUsername(), reyeetEntity.getPost().getUser().getName()),
-                reyeetEntity.getPost().getImageId(),
+                reyeetEntity.getPost().getImageId() != null ? reyeetEntity.getPost().getImageId().toString() : null,
                 reyeetEntity.getPost().getReplyCount(),
                 reyeetEntity.getPost().getLikeCount(),
                 reyeetEntity.getPost().getReyeetCount(),

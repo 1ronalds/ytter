@@ -17,7 +17,7 @@ public class ReyeetPostData {
 
     private String postId;
     private ProfilePublicData profilePublicData;
-    private Long imageId;
+    private String imageId;
     private Long replyCount;
     private Long likeCount;
     private Long reyeetCount;
